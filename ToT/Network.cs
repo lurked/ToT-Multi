@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using ToT.Library;
 
 namespace ToT
 {
@@ -15,9 +16,11 @@ namespace ToT
         /*public*/
         static NetIncomingMessage incmsg;
         public static NetOutgoingMessage outmsg;
+        public static World CurrentWorld { get; set; }
 
-        public static void Update()
+        public static int Update(string playerName)
         {
+            int index = -1;
             //The biggest difference is that the client side of things easier, 
             //since we will only consider the amount of player object is created, 
             //so there is no keeping track of separate "Server.Connections" as the server side.
@@ -85,7 +88,7 @@ namespace ToT
                                     }
                                     break;
 
-                                case "disconnect": //Clear enough :)
+                                case "disconnect":
                                     {
                                         string name = incmsg.ReadString();
 
@@ -98,15 +101,27 @@ namespace ToT
                                                 break;
                                             }
                                         }
+                                        for (int i = 0; i < Player.players.Count; i++)
+                                            if (Player.players[i].name.Equals(playerName))
+                                            {
+                                                index = i;
+                                                break;
+                                            }
                                     }
                                     break;
-
-                                case "deny": //If the name on the message is the same as ours
+                                case "getworld":
                                     {
-                                        ToTClient.HeadText = "This name is already taken:";
-                                        ToTClient.TextCanWrite = true;
-                                        Player.players.Clear();
+                                        string name = incmsg.ReadString();
+                                        World tWorld = new World();
+                                        incmsg.ReadAllProperties(tWorld);
+                                        CurrentWorld = tWorld;
+
                                     }
+                                    break;
+                                case "deny": //If the name on the message is the same as ours
+                                    ToTClient.HeadText = "This name is already taken:";
+                                    ToTClient.gameState = ClientState.Login;
+                                    Player.players.Clear();
                                     break;
                             }
                         }
@@ -114,6 +129,7 @@ namespace ToT
                 }
                 Client.Recycle(incmsg);
             }
+            return index;
         }
     }
 }

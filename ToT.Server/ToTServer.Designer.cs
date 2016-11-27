@@ -32,7 +32,7 @@
             label1 = new System.Windows.Forms.Label();
             textBox1 = new System.Windows.Forms.TextBox();
             timer1 = new System.Windows.Forms.Timer(this.components);
-            this.SuspendLayout();
+            SuspendLayout();
             // 
             // label1
             // 
@@ -55,7 +55,7 @@
             textBox1.Name = "textBox1";
             textBox1.ReadOnly = true;
             textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            textBox1.Size = new System.Drawing.Size(425, 429);
+            textBox1.Size = new System.Drawing.Size(729, 658);
             textBox1.TabIndex = 1;
             // 
             // timer1
@@ -68,7 +68,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(864, 470);
+            this.ClientSize = new System.Drawing.Size(1168, 699);
             this.Controls.Add(textBox1);
             this.Controls.Add(label1);
             this.Name = "totServerForm";
@@ -83,6 +83,7 @@
         public static System.Windows.Forms.Label label1;
         public static System.Windows.Forms.TextBox textBox1;
         public static System.Windows.Forms.Timer timer1;
+
 
     }
 }

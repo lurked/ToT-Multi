@@ -16,8 +16,6 @@ C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.DXGI.dll
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct3D11.dll
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct2D1.dll
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.XInput.dll
-C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.RawInput.dll
-C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct3D9.dll
 C:\Prog\ToT\ToT.Server\bin\Debug\MonoGame.Framework.xml
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.MediaFoundation.xml
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.xml
@@ -26,5 +24,9 @@ C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.DXGI.xml
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct3D11.xml
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct2D1.xml
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.XInput.xml
+C:\Prog\ToT\ToT.Server\bin\Debug\ToT.Library.dll
+C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.RawInput.dll
+C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct3D9.dll
+C:\Prog\ToT\ToT.Server\bin\Debug\ToT.Library.pdb
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.RawInput.xml
 C:\Prog\ToT\ToT.Server\bin\Debug\SharpDX.Direct3D9.xml

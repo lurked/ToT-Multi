@@ -27,3 +27,5 @@ C:\Prog\ToT\ToT\bin\Windows\x86\Debug\ToT.exe.config
 C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Lidgren.Network.dll
 C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Content\font.xnb
 C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Content\player.xnb
+C:\Prog\ToT\ToT\bin\Windows\x86\Debug\ToT.Library.dll
+C:\Prog\ToT\ToT\bin\Windows\x86\Debug\ToT.Library.pdb

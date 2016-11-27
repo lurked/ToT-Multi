@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Lidgren.Network;
+using ToT.Library;
 
 namespace ToT
 {
@@ -12,23 +14,29 @@ namespace ToT
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        private FrameCounter _frameCounter = new FrameCounter();
+        private Camera PlayerCamera;
 
         Texture2D playerTexture;
         SpriteFont fontTexture;
 
+        int IndexPlayer;
+        string PlayerName;
+
         KeyboardState ActualKeyState,
                       LastKeyState;
-        ClientState gameState;
+        public static ClientState gameState;
 
         public static string HeadText = "Please Enter your name:"; //The main text on the upper left corner
-        public static bool TextCanWrite = true; //Also important: If this is true, you can type in text, 
-                                                //otherwise the players connected to the server and play. 
+        
+        public World CurrentWorld { get; set; }
 
         public ToTClient()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            gameState = ClientState.MainMenu;
+            gameState = ClientState.Login;
+            IndexPlayer = -1;
         }
 
 
@@ -44,6 +52,7 @@ namespace ToT
             //this is important because the data transmission network can be fixed to 60 FPS.
             //NOTE: 60 FPS realtime transmission (for "move" data) is !!!not optimal!!!, but for simplicity thus now used.
             graphics.SynchronizeWithVerticalRetrace = false;
+            
             IsFixedTimeStep = true;
             graphics.ApplyChanges();
 
@@ -51,6 +60,8 @@ namespace ToT
             Network.Client = new NetClient(Network.Config);
 
             base.Initialize();
+            Camera tCam = new Camera(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
+            PlayerCamera = tCam;
         }
 
 
@@ -65,6 +76,7 @@ namespace ToT
 
         protected override void UnloadContent()
         {
+            CurrentWorld = null;
 
         }
 
@@ -76,66 +88,94 @@ namespace ToT
             LastKeyState = ActualKeyState;
             ActualKeyState = Keyboard.GetState();
 
-            Network.Update();
+            int tI = Network.Update(PlayerName);
+            if (tI != -1)
+                IndexPlayer = tI;
+            CurrentWorld = Network.CurrentWorld;
             Player.Update();
 
-
-            if (TextCanWrite == true) //If its is True...
+            switch(gameState)
             {
-                TextInput.Update(); //The TextInput is available and updated
+                case ClientState.Login:
+                    TextInput.Update(); //The TextInput is available and updated
 
-                //If your name is not empty and the actual keystroke
-                if (ActualKeyState.IsKeyDown(Keys.Enter) && LastKeyState.IsKeyUp(Keys.Enter) && TextInput.text != "")
-                {
-                    Network.Client.Start(); //Starting the Network Client
-                    Network.Client.Connect("localhost", 14242); //And Connect the Server with IP (string) and host (int) parameters
+                    //If your name is not empty and the actual keystroke
+                    if (ActualKeyState.IsKeyDown(Keys.Enter) && LastKeyState.IsKeyUp(Keys.Enter) && TextInput.text != "")
+                    {
+                        Network.Client.Start(); //Starting the Network Client
+                        Network.Client.Connect("localhost", 14242); //And Connect the Server with IP (string) and host (int) parameters
 
-                    //The causes are shown below pause for a bit longer. 
-                    //On the client side can be a little time to properly connect to the server before the first message you send us. 
-                    //The second one is also a reason. The client does not manually force the quick exit until it received a first message from the server. 
-                    //If the client connect to trying one with the same name as that already exists on the server, 
-                    //and you attempt to exit Esc-you do not even arrived yet reject response ("deny"), the underlying visible event is used, 
-                    //so you can disconnect from the other player from the server because the name he applied for the existing exit button. 
-                    //Therefore, this must be some pause. 
+                        //The causes are shown below pause for a bit longer. 
+                        //On the client side can be a little time to properly connect to the server before the first message you send us. 
+                        //The second one is also a reason. The client does not manually force the quick exit until it received a first message from the server. 
+                        //If the client connect to trying one with the same name as that already exists on the server, 
+                        //and you attempt to exit Esc-you do not even arrived yet reject response ("deny"), the underlying visible event is used, 
+                        //so you can disconnect from the other player from the server because the name he applied for the existing exit button. 
+                        //Therefore, this must be some pause. 
+                        System.Threading.Thread.Sleep(300);
 
-                    System.Threading.Thread.Sleep(300);
+                        Network.outmsg = Network.Client.CreateMessage();
+                        Network.outmsg.Write("connect");
+                        PlayerName = TextInput.text;
+                        Network.outmsg.Write(PlayerName);
+                        Network.outmsg.Write(160);
+                        Network.outmsg.Write(120);
+                        Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
+                        
+                        gameState = ClientState.Game;
 
-                    Network.outmsg = Network.Client.CreateMessage();
-                    Network.outmsg.Write("connect");
-                    Network.outmsg.Write(TextInput.text);
-                    Network.outmsg.Write(160);
-                    Network.outmsg.Write(120);
-                    Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
+                        System.Threading.Thread.Sleep(300);
 
-                    TextCanWrite = false;
+                        Network.outmsg = Network.Client.CreateMessage();
+                        Network.outmsg.Write("getworld");
+                        Network.outmsg.Write(PlayerName);
+                        Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
+                    
+                        System.Threading.Thread.Sleep(300);
 
-                    System.Threading.Thread.Sleep(300);
-                }
-                else if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
-                {
-                    this.Exit();
-                }
-            }
-            else
-            {
-                if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
-                {
-                    Network.outmsg = Network.Client.CreateMessage();
-                    Network.outmsg.Write("disconnect");
-                    Network.outmsg.Write(TextInput.text);
-                    Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
 
-                    System.Threading.Thread.Sleep(300);
+                    }
+                    else if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
+                    {
+                        this.Exit();
+                    }
+                    break;
+                case ClientState.Game:
+                    if (IndexPlayer == -1)
+                        IndexPlayer = GetCurrentPlayer(PlayerName);
+                    
 
-                    TextCanWrite = true;
-                    Player.players.Clear();
-                    HeadText = "Please Enter your name:";
+                    if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
+                    {
+                        Network.outmsg = Network.Client.CreateMessage();
+                        Network.outmsg.Write("disconnect");
+                        Network.outmsg.Write(PlayerName);
+                        Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
 
-                    //this.Exit();
-                }
+                        System.Threading.Thread.Sleep(300);
+
+                        gameState = ClientState.Login;
+                        Player.players.Clear();
+                        HeadText = "Please Enter your name:";
+
+                        //this.Exit();
+                    }
+                    break;
             }
 
             base.Update(gameTime);
+            if (IndexPlayer != -1)
+                PlayerCamera.SetFocalPoint(Player.players[IndexPlayer].position);
+            PlayerCamera.Update();
+        }
+
+        public int GetCurrentPlayer(string playerName)
+        {
+            //foreach (Player tP in Player.players)
+            for (int i = 0; i < Player.players.Count; i++)
+                if (Player.players[i].name == playerName)
+                    return i;
+            return -1;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -143,22 +183,34 @@ namespace ToT
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
-                              BlendState.NonPremultiplied);
-
-            if (TextCanWrite == true)
+                              BlendState.NonPremultiplied, null, null, null, null, PlayerCamera.ViewMatrix);
+            switch(gameState)
             {
-                spriteBatch.DrawString(fontTexture, HeadText, new Vector2(), Color.White);
-                spriteBatch.DrawString(fontTexture, TextInput.text + "_", new Vector2(0, 25), Color.White);
-            }
-
-            foreach (Player p in Player.players)
-            {
-                spriteBatch.Draw(playerTexture, new Rectangle((int)p.position.X, (int)p.position.Y, p.defaultRect.Width, p.defaultRect.Height), p.drawRect, Color.White);
-                spriteBatch.DrawString(fontTexture, p.name, new Vector2(p.position.X, p.position.Y - 18), Color.White, 0, new Vector2(), 0.6f, SpriteEffects.None, 0);
-            }
-
-            spriteBatch.DrawString(fontTexture, "Players: " + Player.players.Count.ToString(), new Vector2(0, 580), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
-
+                case ClientState.Login:
+                    spriteBatch.DrawString(fontTexture, HeadText, new Vector2(), Color.White);
+                    spriteBatch.DrawString(fontTexture, TextInput.text + "_", new Vector2(0, 25), Color.White);
+                    break;
+                case ClientState.Game:
+                    if (CurrentWorld != null)
+                    {
+                        CurrentWorld.Draw(spriteBatch);
+                        spriteBatch.DrawString(fontTexture, "World: " + CurrentWorld.Name, new Vector2(0, 0), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
+                    }
+                    foreach (Player p in Player.players)
+                    {
+                        spriteBatch.Draw(playerTexture, new Rectangle((int)p.position.X, (int)p.position.Y, p.defaultRect.Width, p.defaultRect.Height), p.drawRect, Color.White);
+                        spriteBatch.DrawString(fontTexture, p.name, new Vector2(p.position.X, p.position.Y - 18), Color.White, 0, new Vector2(), 0.6f, SpriteEffects.None, 0);
+                    }
+                    spriteBatch.DrawString(fontTexture, "Players: " + Player.players.Count.ToString(), new Vector2(0, 580), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
+                    
+                    //FPS COUNTER
+                    var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    _frameCounter.Update(deltaTime);
+                    var fps = string.Format("FPS: {0}", Math.Round(_frameCounter.AverageFramesPerSecond));
+                    spriteBatch.DrawString(fontTexture, fps, new Vector2(700, 0), Color.Black);
+                    break;
+            }            
+             
             spriteBatch.End();
 
             base.Draw(gameTime);

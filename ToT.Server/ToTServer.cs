@@ -9,12 +9,16 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework;
 using Lidgren.Network;
+using ToT.Library;
 
 
 namespace ToT.Server
 {
     public partial class totServerForm : Form
     {
+        public World CurrentWorld { get; set; }
+        public GameTime ServerGameTime { get; set; }
+        TimeSpan MainLoopTS { get; set; }
         public totServerForm()
         {
             InitializeComponent();
@@ -25,18 +29,33 @@ namespace ToT.Server
             Network.Server = new NetServer(Network.Config);
             Network.Server.Start();
 
-            textBox1.AppendText("Server started!" + "\r\n");
-            textBox1.AppendText("Waiting for connections..." + "\r\n" + "\r\n");
+            AddLogEntry("Generating Current World..." + "\r\n");
+            CurrentWorld = new World();
+            CurrentWorld.Name = "Base World 01";
+            AddLogEntry("Generation Complete." + "\r\n\r\n");
+
+            AddLogEntry("Server started!" + "\r\n");
+            AddLogEntry("Waiting for connections..." + "\r\n\r\n");
+
+            ServerGameTime = new GameTime();
+            MainLoopTS = new TimeSpan(0, 0, 0, 0, timer1.Interval);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            Network.Update();
+            ServerGameTime.TotalGameTime.Add(MainLoopTS);
+            Network.Update(CurrentWorld);
             Player.Update();
+            CurrentWorld.UpdateServer(ServerGameTime);
         }
 
-
+        public static void AddLogEntry(string logText)
+        {
+            textBox1.AppendText(DateTime.Now.ToString() + ": " + logText);
+        }
     }
+
+    
 
     class Network // A Basics Network class
     {
@@ -48,7 +67,7 @@ namespace ToT.Server
         /*public*/
         static bool playerRefresh; //below for explanation...
 
-        public static void Update()
+        public static void Update(World tCurrentWorld)
         {
             while ((incmsg = Server.ReadMessage()) != null) //while the message is received, and is not equal to null...
             {
@@ -107,7 +126,7 @@ namespace ToT.Server
                                         {
                                             System.Threading.Thread.Sleep(100); //A little pause to make sure you connect the client before performing further operations
                                             Player.players.Add(new Player(name, new Vector2(x, y), 0)); //Add to player messages received as a parameter
-                                            totServerForm.textBox1.AppendText(name + " connected." + "\r\n");
+                                            totServerForm.AddLogEntry(name + " connected." + "\r\n");
 
                                             for (int i = 0; i < Player.players.Count; i++)
                                             {
@@ -155,7 +174,17 @@ namespace ToT.Server
                                         }
                                     }
                                     break;
+                                case "getworld":
+                                    string playerName = incmsg.ReadString();
 
+                                    totServerForm.AddLogEntry(playerName + " - GetWorld Request\r\n");
+                                    outmsg = Server.CreateMessage();
+                                    outmsg.Write("getworld");
+                                    outmsg.Write(playerName);
+                                    outmsg.WriteAllProperties(tCurrentWorld);
+                                    Server.SendMessage(Network.outmsg, incmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
+                                    totServerForm.AddLogEntry(playerName + " - GetWorld Request Answered\r\n\r\n");
+                                    break;
                                 case "disconnect": //If the client want to disconnect from server at manually
                                     {
                                         string name = incmsg.ReadString();
@@ -166,7 +195,7 @@ namespace ToT.Server
                                             {
                                                 Server.Connections[i].Disconnect("bye"); //The server disconnect the correct client with index
                                                 System.Threading.Thread.Sleep(100); //Again a small pause, the server disconnects the client actually
-                                                totServerForm.textBox1.AppendText(name + " disconnected." + "\r\n");
+                                                totServerForm.AddLogEntry(name + " disconnected.\r\n");
 
                                                 if (Server.ConnectionsCount != 0) //After if clients count not 0
                                                 {
@@ -234,7 +263,7 @@ namespace ToT.Server
                     {
                         //The procedure will be the same as the above when "disconnect" message
                         Network.Server.Connections[i].Disconnect("bye");
-                        totServerForm.textBox1.AppendText(players[i].name + " is timed out." + "\r\n");
+                        totServerForm.AddLogEntry(players[i].name + " is timed out." + "\r\n");
                         System.Threading.Thread.Sleep(100);
 
                         if (Network.Server.ConnectionsCount != 0)

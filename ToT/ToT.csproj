@@ -39,6 +39,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Camera.cs" />
     <Compile Include="CodeFile1.cs" />
     <Compile Include="ToTClient.cs" />
     <Compile Include="Network.cs" />
@@ -72,6 +73,12 @@
     <None Include="Content\player.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ToT.Library\ToT.Library.csproj">
+      <Project>{d9475e59-c3e8-43c4-865b-345f7bfff26a}</Project>
+      <Name>ToT.Library</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />

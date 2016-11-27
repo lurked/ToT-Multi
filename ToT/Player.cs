@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using ToT.Library;
 
 namespace ToT
 {
-    class Player
+    public class Player
     {
         public string name;
         public Vector2 position;
