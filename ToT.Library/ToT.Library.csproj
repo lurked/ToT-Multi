@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="Block.cs" />
     <Compile Include="FrameCounter.cs" />
+    <Compile Include="modEnum.cs" />
+    <Compile Include="Prop.cs" />
     <Compile Include="TextureRect.cs" />
     <Compile Include="World.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

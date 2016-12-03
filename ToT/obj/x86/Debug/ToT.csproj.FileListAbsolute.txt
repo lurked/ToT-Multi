@@ -29,3 +29,5 @@ C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Content\font.xnb
 C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Content\player.xnb
 C:\Prog\ToT\ToT\bin\Windows\x86\Debug\ToT.Library.dll
 C:\Prog\ToT\ToT\bin\Windows\x86\Debug\ToT.Library.pdb
+C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Content\char\char48_ballface.xnb
+C:\Prog\ToT\ToT\bin\Windows\x86\Debug\Content\char\char48_ballface2.xnb

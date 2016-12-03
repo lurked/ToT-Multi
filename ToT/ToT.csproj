@@ -40,7 +40,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
-    <Compile Include="CodeFile1.cs" />
     <Compile Include="ToTClient.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Player.cs" />

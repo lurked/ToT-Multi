@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -26,6 +27,7 @@ namespace ToT
         KeyboardState ActualKeyState,
                       LastKeyState;
         public static ClientState gameState;
+        public static PlayerState playerState;
 
         public static string HeadText = "Please Enter your name:"; //The main text on the upper left corner
         
@@ -36,15 +38,16 @@ namespace ToT
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             gameState = ClientState.Login;
-            IndexPlayer = -1;
+            playerState = PlayerState.Idle;
+            IndexPlayer = -1;         
         }
 
 
         protected override void Initialize()
         {
             IsMouseVisible = true;
-            graphics.PreferredBackBufferWidth = 800;
-            graphics.PreferredBackBufferHeight = 600;
+            graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 768;
             //graphics.IsFullScreen = true;
             
             //Adjusts the speed of the game. 
@@ -69,7 +72,7 @@ namespace ToT
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            playerTexture = Content.Load<Texture2D>("player");
+            playerTexture = Content.Load<Texture2D>("char\\char48_ballface2");
             fontTexture = Content.Load<SpriteFont>("font");
         }
 
@@ -92,7 +95,7 @@ namespace ToT
             if (tI != -1)
                 IndexPlayer = tI;
             CurrentWorld = Network.CurrentWorld;
-            Player.Update();
+            Player.Update(PlayerCamera);
 
             switch(gameState)
             {
@@ -144,28 +147,57 @@ namespace ToT
                     if (IndexPlayer == -1)
                         IndexPlayer = GetCurrentPlayer(PlayerName);
                     
-
-                    if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
+                    if (playerState == PlayerState.Chatting)
                     {
-                        Network.outmsg = Network.Client.CreateMessage();
-                        Network.outmsg.Write("disconnect");
-                        Network.outmsg.Write(PlayerName);
-                        Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
+                        TextInput.Update(); //The TextInput is available and updated
+                        if (ActualKeyState.IsKeyDown(Keys.Enter) && LastKeyState.IsKeyUp(Keys.Enter) && TextInput.text != "")
+                        {
+                            Network.outmsg = Network.Client.CreateMessage();
+                            Network.outmsg.Write("chat");
+                            Network.outmsg.Write(PlayerName);
+                            string chatText = TextInput.text;
+                            Network.outmsg.Write(chatText);
+                            Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
 
-                        System.Threading.Thread.Sleep(300);
-
-                        gameState = ClientState.Login;
-                        Player.players.Clear();
-                        HeadText = "Please Enter your name:";
-
-                        //this.Exit();
+                            playerState = PlayerState.Idle;
+                        }
+                        if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
+                        {
+                            playerState = PlayerState.Idle;
+                        }
                     }
+                    else
+                    {
+                        if (ActualKeyState.IsKeyDown(Keys.Escape) && LastKeyState.IsKeyUp(Keys.Escape))
+                        {
+                            Network.outmsg = Network.Client.CreateMessage();
+                            Network.outmsg.Write("disconnect");
+                            Network.outmsg.Write(PlayerName);
+                            Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.ReliableOrdered);
+
+                            System.Threading.Thread.Sleep(300);
+
+                            gameState = ClientState.Login;
+                            Player.players.Clear();
+                            HeadText = "Please Enter your name:";
+                            PlayerCamera.SetFocalPoint(Vector2.Zero);
+                        }
+                        if (ActualKeyState.IsKeyDown(Keys.T) && LastKeyState.IsKeyUp(Keys.T))
+                        {
+                            TextInput.text = "";
+                            playerState = PlayerState.Chatting;
+                        }
+                    }
+
+                    
                     break;
             }
 
             base.Update(gameTime);
+
             if (IndexPlayer != -1)
-                PlayerCamera.SetFocalPoint(Player.players[IndexPlayer].position);
+                if (Player.players.Count > IndexPlayer)
+                    PlayerCamera.SetFocalPoint(Player.players[IndexPlayer].position);
             PlayerCamera.Update();
         }
 
@@ -181,36 +213,53 @@ namespace ToT
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-
+            bool drawWorld = true;
+            bool drawChat = false;
             spriteBatch.Begin(SpriteSortMode.Immediate,
                               BlendState.NonPremultiplied, null, null, null, null, PlayerCamera.ViewMatrix);
             switch(gameState)
             {
                 case ClientState.Login:
-                    spriteBatch.DrawString(fontTexture, HeadText, new Vector2(), Color.White);
-                    spriteBatch.DrawString(fontTexture, TextInput.text + "_", new Vector2(0, 25), Color.White);
+                    drawWorld = false;
+                    spriteBatch.DrawString(fontTexture, HeadText, PlayerCamera.Position + new Vector2(), Color.White);
+                    spriteBatch.DrawString(fontTexture, TextInput.text + "_", PlayerCamera.Position + new Vector2(0, 25), Color.White);
                     break;
                 case ClientState.Game:
-                    if (CurrentWorld != null)
-                    {
-                        CurrentWorld.Draw(spriteBatch);
-                        spriteBatch.DrawString(fontTexture, "World: " + CurrentWorld.Name, new Vector2(0, 0), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
-                    }
-                    foreach (Player p in Player.players)
-                    {
-                        spriteBatch.Draw(playerTexture, new Rectangle((int)p.position.X, (int)p.position.Y, p.defaultRect.Width, p.defaultRect.Height), p.drawRect, Color.White);
-                        spriteBatch.DrawString(fontTexture, p.name, new Vector2(p.position.X, p.position.Y - 18), Color.White, 0, new Vector2(), 0.6f, SpriteEffects.None, 0);
-                    }
-                    spriteBatch.DrawString(fontTexture, "Players: " + Player.players.Count.ToString(), new Vector2(0, 580), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
-                    
-                    //FPS COUNTER
-                    var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    _frameCounter.Update(deltaTime);
-                    var fps = string.Format("FPS: {0}", Math.Round(_frameCounter.AverageFramesPerSecond));
-                    spriteBatch.DrawString(fontTexture, fps, new Vector2(700, 0), Color.Black);
+                    if (playerState == PlayerState.Chatting)
+                        drawChat = true;
                     break;
-            }            
-             
+            }
+
+
+            if (drawWorld)
+            {
+                if (CurrentWorld != null)
+                {
+                    CurrentWorld.Draw(spriteBatch);
+                    spriteBatch.DrawString(fontTexture, "World: " + CurrentWorld.Name, new Vector2(0, 0), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
+                }
+                foreach (Player p in Player.players)
+                {
+                    spriteBatch.Draw(playerTexture, new Rectangle((int)p.position.X, (int)p.position.Y, p.defaultRect.Width, p.defaultRect.Height), p.drawRect, Color.White, p.Rotation, new Vector2(24, 24), SpriteEffects.None, 0f);
+                    spriteBatch.DrawString(fontTexture, p.name, new Vector2(p.position.X - p.defaultRect.Width / 2, p.position.Y - 22 - p.defaultRect.Height / 2), Color.Black, 0, new Vector2(), 0.6f, SpriteEffects.None, 0);
+                    if (p.healthbar == null || p.LastPain != p.Pain)
+                    {
+                        float tHealth = p.GetPropLevel("Health");
+                        TextureRect tRect = new TextureRect(spriteBatch, new Vector2(p.defaultRect.Width, 6f), Color.Green, 0, TextureRectType.PercentageBar, (tHealth - p.Pain) / tHealth);
+                        p.healthbar = tRect.RectTexture;
+                    }
+                    spriteBatch.Draw(p.healthbar, new Rectangle((int)(p.position.X - p.defaultRect.Width / 2), (int)(p.position.Y - 6 - p.defaultRect.Height / 2), (int)p.defaultRect.Width, 5), Color.White);
+                }
+                //spriteBatch.DrawString(fontTexture, "Players: " + Player.players.Count.ToString(), new Vector2(0, 580), Color.White, 0, new Vector2(), 0.75f, SpriteEffects.None, 0);
+
+                //FPS COUNTER
+                var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                _frameCounter.Update(deltaTime);
+                var fps = string.Format("FPS: {0}", Math.Round(_frameCounter.AverageFramesPerSecond));
+                spriteBatch.DrawString(fontTexture, fps, PlayerCamera.Position + new Vector2(700, 0), Color.Black);
+            }
+            if (drawChat)
+                spriteBatch.DrawString(fontTexture, TextInput.text + "_", PlayerCamera.Position + new Vector2(0, PlayerCamera.ScreenDimensions.Y - 25), Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);

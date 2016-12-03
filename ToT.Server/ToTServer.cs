@@ -95,6 +95,8 @@ namespace ToT.Server
                                         string name = incmsg.ReadString(); //Reading the 2. message who included the name (you can use integer, if you want to store the players in little data)
                                         int x = incmsg.ReadInt32(); //Reading the x position
                                         int y = incmsg.ReadInt32(); // -||- y postion
+                                        //float rot = incmsg.ReadFloat(); // -||- player's angle
+                                        //float pain = incmsg.ReadFloat(); // -||- player's pain
 
                                         playerRefresh = true; //just setting this "True"
 
@@ -126,6 +128,10 @@ namespace ToT.Server
                                         {
                                             System.Threading.Thread.Sleep(100); //A little pause to make sure you connect the client before performing further operations
                                             Player.players.Add(new Player(name, new Vector2(x, y), 0)); //Add to player messages received as a parameter
+                                            int ind = Player.players.Count - 1;
+                                            //Player.players[ind].Rotation = rot;
+                                            //Player.players[ind].Pain = pain;
+
                                             totServerForm.AddLogEntry(name + " connected." + "\r\n");
 
                                             for (int i = 0; i < Player.players.Count; i++)
@@ -135,8 +141,10 @@ namespace ToT.Server
 
                                                 outmsg.Write("connect");
                                                 outmsg.Write(Player.players[i].name);
-                                                outmsg.Write((int)Player.players[i].pozition.X);
-                                                outmsg.Write((int)Player.players[i].pozition.Y);
+                                                outmsg.Write((int)Player.players[i].position.X);
+                                                outmsg.Write((int)Player.players[i].position.Y);
+                                                outmsg.Write((float)Player.players[i].Rotation);
+                                                outmsg.Write((float)Player.players[i].Pain);
 
                                                 Server.SendMessage(Network.outmsg, Network.Server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
                                             }
@@ -157,13 +165,17 @@ namespace ToT.Server
                                             string name = incmsg.ReadString();
                                             int x = incmsg.ReadInt32();
                                             int y = incmsg.ReadInt32();
+                                            float rot = incmsg.ReadFloat(); // -||- player's angle
+                                            float pain = incmsg.ReadFloat(); // -||- player's pain
 
                                             for (int i = 0; i < Player.players.Count; i++)
                                             {
                                                 if (Player.players[i].name.Equals(name))
                                                 {
-                                                    Player.players[i].pozition = new Vector2(x, y);
-                                                    Player.players[i].timeOut = 0; //below for explanation (Player class)...
+                                                    Player.players[i].position = new Vector2(x, y);
+                                                    Player.players[i].timeOut = 0;
+                                                    Player.players[i].Rotation = rot;
+                                                    Player.players[i].Pain = pain;
                                                     break;
                                                 }
                                             }
@@ -175,15 +187,31 @@ namespace ToT.Server
                                     }
                                     break;
                                 case "getworld":
-                                    string playerName = incmsg.ReadString();
+                                    {
+                                        string playerName = incmsg.ReadString();
 
-                                    totServerForm.AddLogEntry(playerName + " - GetWorld Request\r\n");
-                                    outmsg = Server.CreateMessage();
-                                    outmsg.Write("getworld");
-                                    outmsg.Write(playerName);
-                                    outmsg.WriteAllProperties(tCurrentWorld);
-                                    Server.SendMessage(Network.outmsg, incmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
-                                    totServerForm.AddLogEntry(playerName + " - GetWorld Request Answered\r\n\r\n");
+                                        totServerForm.AddLogEntry(playerName + " - GetWorld Request\r\n");
+                                        outmsg = Server.CreateMessage();
+                                        outmsg.Write("getworld");
+                                        outmsg.Write(playerName);
+                                        outmsg.WriteAllProperties(tCurrentWorld);
+                                        Server.SendMessage(Network.outmsg, incmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
+                                        totServerForm.AddLogEntry(playerName + " - GetWorld Request Answered\r\n\r\n");
+                                    }
+                                    break;
+                                case "chat":
+                                    {
+                                        string playerName = incmsg.ReadString();
+                                        string chatText = incmsg.ReadString();
+                                        totServerForm.AddLogEntry(playerName + " : " + chatText + "\r\n");
+
+                                        //outmsg = Server.CreateMessage();
+                                        //outmsg.Write("chat");
+                                        //outmsg.Write(playerName);
+                                        //outmsg.Write(chatText);
+                                        //Server.SendMessage(Network.outmsg, incmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
+                                        //totServerForm.AddLogEntry(playerName + " - Chat Request Answered\r\n\r\n");
+                                    }
                                     break;
                                 case "disconnect": //If the client want to disconnect from server at manually
                                     {
@@ -227,7 +255,9 @@ namespace ToT.Server
     class Player //The Player class and instant constructor
     {
         public string name;
-        public Vector2 pozition;
+        public Vector2 position;
+        public float Rotation;
+        public float Pain;
         public int timeOut; //This disconnects the client, even if no message from him within a certain period of time and not been reset value.
 
         public static List<Player> players = new List<Player>();
@@ -237,7 +267,7 @@ namespace ToT.Server
                       int timeOut)
         {
             this.name = name;
-            this.pozition = pozition;
+            this.position = pozition;
             this.timeOut = timeOut;
         }
 
@@ -254,8 +284,10 @@ namespace ToT.Server
 
                     Network.outmsg.Write("move");
                     Network.outmsg.Write(players[i].name);
-                    Network.outmsg.Write((int)players[i].pozition.X);
-                    Network.outmsg.Write((int)players[i].pozition.Y);
+                    Network.outmsg.Write((int)players[i].position.X);
+                    Network.outmsg.Write((int)players[i].position.Y);
+                    Network.outmsg.Write((float)players[i].Rotation);
+                    Network.outmsg.Write((float)players[i].Pain);
 
                     Network.Server.SendMessage(Network.outmsg, Network.Server.Connections, NetDeliveryMethod.Unreliable, 0);
 

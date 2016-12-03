@@ -44,7 +44,7 @@ namespace ToT
                                         //where the first step in any case is added to the player, 
                                         //and then check the second round with a double for loop that is in agreement with two players.
 
-                                        Player.players.Add(new Player(name, new Vector2(x, y), new Rectangle(0, 0, 20, 40), new Rectangle(0, 0, 20, 40)));
+                                        Player.players.Add(new Player(name, new Vector2(x, y), new Rectangle(0, 0, 48, 48), new Rectangle(0, 0, 48, 48)));
 
                                         for (int i1 = 0; i1 < Player.players.Count; i1++)
                                         {
@@ -68,6 +68,8 @@ namespace ToT
                                             string name = incmsg.ReadString();
                                             int x = incmsg.ReadInt32();
                                             int y = incmsg.ReadInt32();
+                                            float rot = incmsg.ReadFloat(); // -||- player's angle
+                                            float pain = incmsg.ReadFloat(); // -||- player's pain
 
                                             for (int i = 0; i < Player.players.Count; i++)
                                             {
@@ -77,6 +79,8 @@ namespace ToT
                                                 if (Player.players[i].name.Equals(name) && Player.players[i].name != TextInput.text)
                                                 {
                                                     Player.players[i].position = new Vector2(x, y);
+                                                    Player.players[i].Rotation = rot;
+                                                    Player.players[i].Pain = pain;
                                                     break;
                                                 }
                                             }

@@ -30,7 +30,7 @@ namespace ToT.Library
             BlocksBase.Add(new Block()
             {
                 Position = new Vector2(0, 0),
-                Dimensions = new Vector2(480, 270),
+                Dimensions = new Vector2(1440, 900),
                 Level = 0,
                 TemplateName = "MainBase"
             });

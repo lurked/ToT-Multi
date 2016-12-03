@@ -20,6 +20,8 @@ namespace ToT
                Keys.D4, Keys.D5, Keys.D6, Keys.D7,
                Keys.D8, Keys.D9,
 
+               Keys.Space,
+
                Keys.A, Keys.B, Keys.C, Keys.D, Keys.E,
                Keys.F, Keys.G, Keys.H, Keys.I, Keys.J,
                Keys.K, Keys.L, Keys.M, Keys.N, Keys.O,
@@ -73,6 +75,10 @@ namespace ToT
                             break;
 
 
+                        case Keys.Space:
+                            _char += " ";
+                            break;
+                            
 
                         case Keys.A:
                             _char += "a";
@@ -170,7 +176,7 @@ namespace ToT
                             _char = _char.ToUpper();
                         }
                     }
-                    if (text.Length < 10)
+                    if (text.Length < 140)
                         text += _char;
                 }
             }
