@@ -95,7 +95,7 @@ namespace ToT
             if (tI != -1)
                 IndexPlayer = tI;
             CurrentWorld = Network.CurrentWorld;
-            Player.Update(PlayerCamera);
+            Player.Update(PlayerCamera, CurrentWorld);
 
             switch(gameState)
             {

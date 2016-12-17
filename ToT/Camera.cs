@@ -11,7 +11,6 @@ namespace ToT
     {
         Vector2 position;
         Matrix viewMatrix;
-        bool instant = true;
         public Vector2 ScreenDimensions { get; set; }
 
         public Matrix ViewMatrix

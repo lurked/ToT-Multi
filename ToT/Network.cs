@@ -117,7 +117,11 @@ namespace ToT
                                     {
                                         string name = incmsg.ReadString();
                                         World tWorld = new World();
-                                        incmsg.ReadAllProperties(tWorld);
+                                        FileManager fmWorld = new FileManager();
+                                        string srlzdWorld;
+                                        incmsg.ReadString(out srlzdWorld);
+                                        tWorld = fmWorld.DeserializeWorld(srlzdWorld);
+
                                         CurrentWorld = tWorld;
 
                                     }

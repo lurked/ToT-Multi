@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 using Lidgren.Network;
 using ToT.Library;
 
@@ -16,29 +18,21 @@ namespace ToT.Server
 {
     public partial class totServerForm : Form
     {
+        public const string WORLDPATH = "C:/Prog/ToT/ToT/Worlds/";
         public World CurrentWorld { get; set; }
         public GameTime ServerGameTime { get; set; }
         TimeSpan MainLoopTS { get; set; }
+        FileManager fileManager;
         public totServerForm()
         {
             InitializeComponent();
 
-            //creating a new network config, and starting the server (with "Network" class, created below)
-            Network.Config = new NetPeerConfiguration("ToTNetwork"); // The server and the client program must also use this name, so that can communicate with each other.
-            Network.Config.Port = 14242; //one port, if your PC it not using yet
-            Network.Server = new NetServer(Network.Config);
-            Network.Server.Start();
+            InitGameModes();
 
-            AddLogEntry("Generating Current World..." + "\r\n");
-            CurrentWorld = new World();
-            CurrentWorld.Name = "Base World 01";
-            AddLogEntry("Generation Complete." + "\r\n\r\n");
+            fileManager = new FileManager();
 
-            AddLogEntry("Server started!" + "\r\n");
-            AddLogEntry("Waiting for connections..." + "\r\n\r\n");
+            InitWorlds();
 
-            ServerGameTime = new GameTime();
-            MainLoopTS = new TimeSpan(0, 0, 0, 0, timer1.Interval);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -49,9 +43,127 @@ namespace ToT.Server
             CurrentWorld.UpdateServer(ServerGameTime);
         }
 
+        public void StartServer()
+        {
+            //creating a new network config, and starting the server (with "Network" class, created below)
+            Network.Config = new NetPeerConfiguration("ToTNetwork"); // The server and the client program must also use this name, so that can communicate with each other.
+            Network.Config.Port = 14242; //one port, if your PC it not using yet
+            Network.Server = new NetServer(Network.Config);
+            Network.Server.Start();
+
+            AddLogEntry("Starting Server...\r\n\r\n");
+            AddLogEntry("Game Mode : " + cboGameMode.Text + "\r\n\r\n");
+
+            if (cboWorld.Text == "New World")
+            {
+                AddLogEntry("Generating Current World : " + txtWorldName.Text + "...\r\n\r\n");
+                CurrentWorld = new World(txtWorldName.Text, WorldAction.GenerateNew);
+                //CurrentWorld.Name = "Base World 01";
+
+                AddLogEntry("Generation Complete." + "\r\n\r\n");
+
+            }
+            else
+            {
+                AddLogEntry("Generating Current World : " + cboWorld.Text + "...\r\n\r\n");
+                //CurrentWorld = new World(cboWorld.Text);
+                CurrentWorld = fileManager.LoadWorld(WORLDPATH + cboWorld.Text + ".totw");
+
+                AddLogEntry("Generation Complete." + "\r\n\r\n");
+
+            }
+            AddLogEntry("Server started!" + "\r\n");
+            AddLogEntry("Waiting for connections..." + "\r\n\r\n");
+
+            ServerGameTime = new GameTime();
+            MainLoopTS = new TimeSpan(0, 0, 0, 0, timer1.Interval);
+            timer1.Enabled = true;
+            timer1.Start();
+        }
+
+        public void StopServer()
+        {
+            timer1.Stop();
+            timer1.Enabled = false;
+
+            AddLogEntry("Saving current world.\r\n\r\n");
+
+            fileManager.SaveToFile(fileManager.SerializeWorld(CurrentWorld), WORLDPATH + CurrentWorld.Name + ".totw");
+
+            AddLogEntry("Closing current world..." + "\r\n");
+
+            AddLogEntry("Server shut down." + "\r\n");
+
+            Network.Server.Shutdown("Server stopped manually by host.");
+            MainLoopTS = new TimeSpan(0, 0, 0, 0, timer1.Interval);
+
+            InitWorlds();
+        }
+
+        public void InitGameModes()
+        {
+            var values = Enum.GetValues(typeof(GameMode));
+
+            foreach (GameMode tGM in values)
+                cboGameMode.Items.Add(tGM.ToString());
+
+            cboGameMode.Text = "Adventure";
+        }
+
         public static void AddLogEntry(string logText)
         {
             textBox1.AppendText(DateTime.Now.ToString() + ": " + logText);
+        }
+
+        public void InitWorlds()
+        {
+            cboWorld.Items.Clear();
+            List<string> tWorlds = fileManager.GetWorlds(WORLDPATH);
+            cboWorld.Items.Add("New World");
+            foreach (string tS in tWorlds)
+                cboWorld.Items.Add(tS);
+
+            cboWorld.Text = "New World";
+        }
+
+        private void btnStartServer_Click(object sender, EventArgs e)
+        {
+            if (btnStartServer.Text == "Start") 
+            {
+                if (txtWorldName.Text == "" && cboWorld.Text == "New World")
+                {
+                    MessageBox.Show("Please enter a name to create a new world.");
+                }
+                else
+                {
+                    btnStartServer.Text = "Stop";
+                    StartServer();
+                }
+
+            }
+            else
+            {
+                btnStartServer.Text = "Start";
+                StopServer();
+            }
+
+        }
+
+        private void btnPlay_Click(object sender, EventArgs e)
+        {
+            Process.Start(txtClientPath.Text);
+        }
+
+        private void totServerForm_Load(object sender, EventArgs e)
+        {
+        }
+
+        private void cboWorld_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cboWorld.Text == "New World")
+                groupWorldSettings.Enabled = true;
+            else
+                groupWorldSettings.Enabled = false;
         }
     }
 
@@ -194,8 +306,16 @@ namespace ToT.Server
                                         outmsg = Server.CreateMessage();
                                         outmsg.Write("getworld");
                                         outmsg.Write(playerName);
-                                        outmsg.WriteAllProperties(tCurrentWorld);
-                                        Server.SendMessage(Network.outmsg, incmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
+                                        FileManager fmWorld = new FileManager();
+                                        string srlzdWorld = fmWorld.SerializeWorld(tCurrentWorld);
+                                        outmsg.Write(srlzdWorld);
+                                        //outmsg.WriteAllProperties(tCurrentWorld);
+                                        //outmsg.WriteAllProperties(tCurrentWorld.BlocksBase);
+                                        //outmsg.WriteAllProperties(tCurrentWorld.BlocksNorth);
+                                        //outmsg.WriteAllProperties(tCurrentWorld.BlocksSouth);
+                                        //outmsg.WriteAllProperties(tCurrentWorld.BlocksWest);
+                                        //outmsg.WriteAllProperties(tCurrentWorld.BlocksEast);
+                                        Server.SendMessage(outmsg, incmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
                                         totServerForm.AddLogEntry(playerName + " - GetWorld Request Answered\r\n\r\n");
                                     }
                                     break;
@@ -291,7 +411,7 @@ namespace ToT.Server
 
                     Network.Server.SendMessage(Network.outmsg, Network.Server.Connections, NetDeliveryMethod.Unreliable, 0);
 
-                    if (players[i].timeOut > 180) //If this is true, so that is the player not sent information with himself
+                    if (players[i].timeOut > 360) //If this is true, so that is the player not sent information with himself
                     {
                         //The procedure will be the same as the above when "disconnect" message
                         Network.Server.Connections[i].Disconnect("bye");

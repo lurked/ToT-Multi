@@ -15,6 +15,9 @@ namespace ToT.Library
         public int Level { get; set; }
         public string TemplateName { get; set; }
         public Texture2D MainBlockRect { get; set; }
+        public string Coords { get; set; }
+        public bool HasPlayer { get; set; }
+        private Color backColor;
         public Block()
         {
             
@@ -33,10 +36,15 @@ namespace ToT.Library
         {
             if (MainBlockRect == null)
             {
+
                 TextureRect tRect = new TextureRect(spriteBatch, Dimensions, Color.ForestGreen, 3);
                 MainBlockRect = tRect.RectTexture;
             }
-            spriteBatch.Draw(MainBlockRect, new Rectangle((int)Position.X, (int)Position.Y, (int)Dimensions.X, (int)Dimensions.Y), Color.ForestGreen);
+            if (HasPlayer)
+                backColor = Color.DarkGreen;
+            else
+                backColor = Color.ForestGreen;
+            spriteBatch.Draw(MainBlockRect, new Rectangle((int)Position.X, (int)Position.Y, (int)Dimensions.X, (int)Dimensions.Y), backColor);
         }
     }
 }
