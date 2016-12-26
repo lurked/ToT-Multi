@@ -10,7 +10,9 @@ namespace ToT.Library
 {
     public class World
     {
+        public const string TEMPLATESPATH = "C:/Prog/ToT/ToT/Templates/";        
         public string Name { get; set; }
+        public Template StuffTemplate { get; set; }
         public List<Block> BlocksBase { get; set; }
         public List<Block> BlocksNorth { get; set; }
         public List<Block> BlocksSouth { get; set; }
@@ -26,13 +28,16 @@ namespace ToT.Library
             BlocksEast = new List<Block>();
         }
 
-        public World(string name, WorldAction worldAction)
+        public World(string name, WorldAction worldAction, string stuffTemplate = "ToTDefault_01")
         {
             BlocksBase = new List<Block>();
             BlocksNorth = new List<Block>();
             BlocksSouth = new List<Block>();
             BlocksWest = new List<Block>();
             BlocksEast = new List<Block>();
+
+            FileManager fm = new FileManager();
+            StuffTemplate = fm.LoadTemplate(TEMPLATESPATH + stuffTemplate + ".tott");
 
             if (worldAction == WorldAction.GenerateNew)
             {

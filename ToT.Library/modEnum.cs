@@ -1,4 +1,5 @@
-﻿public enum WorldAction
+﻿
+public enum WorldAction
 {
     GenerateNew,
     Load
@@ -39,6 +40,28 @@ public enum PlayerClass
     Mage,
     Druid,
     Tech
+}
+
+public enum ItemType
+{
+    Consummable,
+    Armor,
+    Weapon,
+    Jewelry,
+    Currency,
+    Resource,
+    Container,
+    Decor,
+    Sign
+}
+
+public enum NPCType
+{
+    Neutral,
+    Enemy,
+    Ally,
+    Companion,
+    Vendor
 }
 
 public enum TextureRectType

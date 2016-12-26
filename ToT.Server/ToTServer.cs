@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using Lidgren.Network;
 using ToT.Library;
@@ -19,7 +20,11 @@ namespace ToT.Server
     public partial class totServerForm : Form
     {
         public const string WORLDPATH = "C:/Prog/ToT/ToT/Worlds/";
+        public const string PLAYERSPATH = "C:/Prog/ToT/ToT/Worlds/Players/";
+        public const string TEMPLATESPATH = "C:/Prog/ToT/ToT/Templates/";
+        public const string IMAGESPATH = "C:/Prog/ToT/ToT/Data/Img/";
         public World CurrentWorld { get; set; }
+        public Template CurrentTemplate { get; set; }
         public GameTime ServerGameTime { get; set; }
         TimeSpan MainLoopTS { get; set; }
         FileManager fileManager;
@@ -33,6 +38,7 @@ namespace ToT.Server
 
             InitWorlds();
 
+            InitToolkit();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -57,7 +63,7 @@ namespace ToT.Server
             if (cboWorld.Text == "New World")
             {
                 AddLogEntry("Generating Current World : " + txtWorldName.Text + "...\r\n\r\n");
-                CurrentWorld = new World(txtWorldName.Text, WorldAction.GenerateNew);
+                CurrentWorld = new World(txtWorldName.Text, WorldAction.GenerateNew, cboTemplate.Text);
                 //CurrentWorld.Name = "Base World 01";
 
                 AddLogEntry("Generation Complete." + "\r\n\r\n");
@@ -75,10 +81,22 @@ namespace ToT.Server
             AddLogEntry("Server started!" + "\r\n");
             AddLogEntry("Waiting for connections..." + "\r\n\r\n");
 
-            ServerGameTime = new GameTime();
+            ServerGameTime = new GameTime(); 
             MainLoopTS = new TimeSpan(0, 0, 0, 0, timer1.Interval);
             timer1.Enabled = true;
             timer1.Start();
+            btnSaveWorld.Enabled = true;
+        }
+
+        public void SaveCurrentWorld()
+        {
+            AddLogEntry("Saving current world.\r\n\r\n");
+
+            fileManager.SaveToFile(fileManager.SerializeWorld(CurrentWorld), WORLDPATH + CurrentWorld.Name + ".totw");
+            foreach (Player p in Player.players)
+                fileManager.SaveToFile(JsonConvert.SerializeObject(p), PLAYERSPATH + p.name + ".totp");
+
+            AddLogEntry("Closing current world..." + "\r\n");
         }
 
         public void StopServer()
@@ -86,18 +104,15 @@ namespace ToT.Server
             timer1.Stop();
             timer1.Enabled = false;
 
-            AddLogEntry("Saving current world.\r\n\r\n");
-
-            fileManager.SaveToFile(fileManager.SerializeWorld(CurrentWorld), WORLDPATH + CurrentWorld.Name + ".totw");
-
-            AddLogEntry("Closing current world..." + "\r\n");
-
+            SaveCurrentWorld();
+            Player.players.Clear();
             AddLogEntry("Server shut down." + "\r\n");
 
             Network.Server.Shutdown("Server stopped manually by host.");
             MainLoopTS = new TimeSpan(0, 0, 0, 0, timer1.Interval);
 
             InitWorlds();
+            btnSaveWorld.Enabled = false;
         }
 
         public void InitGameModes()
@@ -117,6 +132,7 @@ namespace ToT.Server
 
         public void InitWorlds()
         {
+            //Loading Worlds to select from in the server tab
             cboWorld.Items.Clear();
             List<string> tWorlds = fileManager.GetWorlds(WORLDPATH);
             cboWorld.Items.Add("New World");
@@ -124,6 +140,21 @@ namespace ToT.Server
                 cboWorld.Items.Add(tS);
 
             cboWorld.Text = "New World";
+
+            //Loading Templates to use for the select world.
+            cboWorld.Items.Clear();
+            List<string> tTemplates = fileManager.GetWorlds(TEMPLATESPATH);
+            foreach (string tS in tTemplates)
+                cboTemplate.Items.Add(tS);
+
+            cboTemplate.Text = "ToTDefault_01";
+        }
+
+        public void InitToolkit()
+        {
+            CurrentTemplate = new Template("BaseTotTemplate01");
+
+            FillItemsList(CurrentTemplate);
         }
 
         private void btnStartServer_Click(object sender, EventArgs e)
@@ -165,6 +196,216 @@ namespace ToT.Server
             else
                 groupWorldSettings.Enabled = false;
         }
+
+        private void btnSaveWorld_Click(object sender, EventArgs e)
+        {
+            SaveCurrentWorld();
+        }
+
+        private void btnBrowseTemplate_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+
+            openFileDialog1.Filter = "ToT Template Files|*.tott";
+            openFileDialog1.Title = "Select a Template File";
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                Template tTemplate;
+
+                tTemplate = fileManager.LoadTemplate(openFileDialog1.FileName);
+
+                if (tTemplate != null)
+                    CurrentTemplate = tTemplate;
+
+                FillItemsList(CurrentTemplate);
+
+
+            }
+        }
+
+        private void btnLoadTemplate_Click(object sender, EventArgs e)
+        {
+            if (txtTemplatePath.Text != "")
+            {
+                Template tTemplate;
+                tTemplate = fileManager.LoadTemplate(txtTemplatePath.Text);
+
+                if (tTemplate != null)
+                    CurrentTemplate = tTemplate;
+
+                FillItemsList(CurrentTemplate);
+            }
+        }
+
+        private void FillItemsList(Template tTemplate)
+        {
+            dgItems.DataSource = null;
+            var bindingList = new BindingList<Item>(tTemplate.Items);
+            var source = new BindingSource(bindingList, null);
+            dgItems.DataSource = source;
+
+
+            dgNPCs.DataSource = null;
+            var bindingList2 = new BindingList<NPC>(tTemplate.NPCs);
+            var source2 = new BindingSource(bindingList2, null);
+            dgNPCs.DataSource = source2;
+        }
+
+        private void FillPropsList(Item tItem)
+        {
+            dgItemProps.DataSource = null;
+            if (tItem.Props != null)
+            {
+                var bindingList = new BindingList<Prop>(tItem.Props);
+                var source = new BindingSource(bindingList, null);
+
+                dgItemProps.DataSource = source;
+            }
+        }
+
+
+        private void FillNPCPropsList(NPC tNPC)
+        {
+            dgNPCProps.DataSource = null;
+            if (tNPC.Props != null)
+            {
+                var bindingList = new BindingList<Prop>(tNPC.Props);
+                var source = new BindingSource(bindingList, null);
+
+                dgNPCProps.DataSource = source;
+            }
+        }
+
+        private void btnAddItem_Click(object sender, EventArgs e)
+        {
+            string tItemName = "New Item";
+            tItemName = GetNextItem(tItemName);
+            CurrentTemplate.Items.Add(new Item(tItemName, ItemType.Currency));
+            FillItemsList(CurrentTemplate);
+        }
+        
+        public string GetNextItem(string tItemName)
+        {
+            string nextItem;
+            int iNextItem = 1;
+
+            foreach(Item tI in CurrentTemplate.Items)
+                if (tI.Name == tItemName  + " " + iNextItem)
+                    iNextItem += 1;
+
+            nextItem = tItemName + " " + iNextItem;
+
+            return nextItem;
+        }
+        public string GetNextNPC(string tNPCName)
+        {
+            string nextNPC;
+            int iNextNPC = 1;
+
+            foreach(NPC tI in CurrentTemplate.NPCs)
+                if (tI.Name == tNPCName  + " " + iNextNPC)
+                    iNextNPC += 1;
+
+            nextNPC = tNPCName + " " + iNextNPC;
+
+            return nextNPC;
+        }
+
+        private void btnRemoveItem_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void dgItems_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            gridItems.SelectedObject = CurrentTemplate.Items[dgItems.CurrentRow.Index];
+            FillPropsList(CurrentTemplate.Items[dgItems.CurrentRow.Index]);
+            txtItemImage.Text = CurrentTemplate.Items[dgItems.CurrentRow.Index].TextureImg;
+        }
+
+        private void dgNPCs_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            gridNPC.SelectedObject = CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index];
+            FillNPCPropsList(CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index]);
+            txtImageNPC.Text = CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index].TextureImg;
+        }
+
+        private void toolStripBtnNewTemplate_Click(object sender, EventArgs e)
+        {
+            string TemplateName = Microsoft.VisualBasic.Interaction.InputBox("Template Name", "Enter the new template's name :", "New Template", -1, -1);
+
+            if (TemplateName != "")
+            {
+                txtTemplatePath.Text = TEMPLATESPATH + TemplateName + ".tott";
+
+                CurrentTemplate = new Template(TemplateName);
+                FillItemsList(CurrentTemplate);
+            }
+            else
+                MessageBox.Show("Template Creation Cancelled.", "New Template");
+        }
+
+        private void toolStripBtnSaveTemplate_Click(object sender, EventArgs e)
+        {
+            string srlzdTemplate = JsonConvert.SerializeObject(CurrentTemplate);
+            string tempPath = txtTemplatePath.Text;
+
+            if (tempPath == "")
+                tempPath = TEMPLATESPATH + CurrentTemplate.Name + ".tott";
+
+            fileManager.SaveToFile(srlzdTemplate, tempPath);
+
+            txtTemplatePath.Text = tempPath;
+        }
+
+        private void btnImgSelect_Click(object sender, EventArgs e)
+        {
+            ImportImage tIImg = new ImportImage();
+            tIImg.ImgPath = IMAGESPATH;
+            tIImg.ShowDialog();
+            txtItemImage.Text = tIImg.ImgToReturn;
+            CurrentTemplate.Items[dgItems.CurrentRow.Index].TextureImg = tIImg.ImgToReturn;
+        }
+
+        private void txtItemImage_TextChanged(object sender, EventArgs e)
+        {
+            if (txtItemImage.Text != "")
+            {
+                pictureItem.Image = Image.FromFile(@IMAGESPATH + txtItemImage.Text + ".png");
+            }
+            else
+                pictureItem.Image = null;
+        }
+
+        private void txtImageNPC_TextChanged(object sender, EventArgs e)
+        {
+            if (txtImageNPC.Text != "")
+            {
+                pictureNPC.Image = Image.FromFile(@IMAGESPATH + txtImageNPC.Text + ".png");
+            }
+            else
+                pictureNPC.Image = null;
+        }
+
+        private void btnAddNPC_Click(object sender, EventArgs e)
+        {
+            string tTemplateName = "New NPC";
+            tTemplateName = GetNextNPC(tTemplateName);
+            CurrentTemplate.NPCs.Add(new NPC(tTemplateName, NPCType.Neutral));
+            FillItemsList(CurrentTemplate);
+        }
+
+        private void btnBrowseImageNPC_Click(object sender, EventArgs e)
+        {
+
+            ImportImage tIImg = new ImportImage();
+            tIImg.ImgPath = IMAGESPATH;
+            tIImg.ShowDialog();
+            txtImageNPC.Text = tIImg.ImgToReturn;
+            CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index].TextureImg = tIImg.ImgToReturn;
+        }
+
+
     }
 
     
@@ -239,7 +480,20 @@ namespace ToT.Server
                                         if (playerRefresh == true)
                                         {
                                             System.Threading.Thread.Sleep(100); //A little pause to make sure you connect the client before performing further operations
-                                            Player.players.Add(new Player(name, new Vector2(x, y), 0)); //Add to player messages received as a parameter
+
+                                            //ICITTE SERVER
+                                            //Checking if player's name exists, if so, load player from file.
+                                            FileManager fmPlayer = new FileManager();
+                                            //Player loadPlayer = fmPlayer.LoadPlayer(name, totServerForm.WORLDPATH);
+                                            string srlzdPlayer = fmPlayer.LoadPlayer(name, totServerForm.PLAYERSPATH);
+                                            Player loadPlayer;
+                                            if (srlzdPlayer == "")
+                                                loadPlayer = new Player(name, new Vector2(x, y), 0);
+                                            else
+                                                loadPlayer = JsonConvert.DeserializeObject<Player>(srlzdPlayer);
+                                            Player.players.Add(loadPlayer);
+
+                                            //Player.players.Add(new Player(name, new Vector2(x, y), 0)); //Add to player messages received as a parameter
                                             int ind = Player.players.Count - 1;
                                             //Player.players[ind].Rotation = rot;
                                             //Player.players[ind].Pain = pain;

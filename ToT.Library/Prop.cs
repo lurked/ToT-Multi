@@ -16,5 +16,10 @@ namespace ToT.Library
             Name = propName;
             Level = propLevel;
         }
+        public Prop()
+        {
+            Name = "Base Property";
+            Level = 0;
+        }
     }
 }

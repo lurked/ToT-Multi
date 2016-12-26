@@ -10,6 +10,7 @@ namespace ToT.Library
 {
     public class FileManager
     {
+        public const string TEMPLATESPATH = "C:/Prog/ToT/ToT/Templates/";
         public void SaveToFile(string strToWrite, string path)
         {
             StreamWriter file = new System.IO.StreamWriter(path);
@@ -19,7 +20,17 @@ namespace ToT.Library
         }
 
 
+        public string LoadPlayer(string name, string worldPath)
+        {
+            DirectoryInfo d = new DirectoryInfo(worldPath);
 
+            string lPlayer = "";
+            foreach (var file in d.GetFiles("*.totp"))
+                if (file.Name.Replace(".totp", "") == name)
+                    lPlayer = File.ReadAllText(@file.FullName);
+
+            return lPlayer;
+        }
 
 
         public string SerializeWorld(World worldToSerialize)
@@ -41,10 +52,18 @@ namespace ToT.Library
 
         public World LoadWorld(string worldPath)
         {
-            World tWorld = null; 
+            World tWorld = null;
             tWorld = JsonConvert.DeserializeObject<World>(File.ReadAllText(@worldPath));
-            
+
             return tWorld;
+        }
+
+        public Template LoadTemplate(string templatePath)
+        {
+            Template tTemplate = null;
+            tTemplate = JsonConvert.DeserializeObject<Template>(File.ReadAllText(@templatePath));
+
+            return tTemplate;
         }
 
         public List<string> GetWorlds(string worldPath)
