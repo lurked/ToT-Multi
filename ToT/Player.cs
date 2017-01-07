@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,9 @@ namespace ToT
 {
     public class Player
     {
+        public const string IMAGESPATH = "C:/Prog/ToT/ToT/Data/Img/";
+
+
         public string name;
         public Vector2 position,
                        lastPos;
@@ -22,13 +26,10 @@ namespace ToT
         public List<Prop> PlayerProps;
         public float Pain { get; set; }
         public float LastPain { get; set; }
-
+        [JsonIgnore]
+        public Prop CurrentAttack { get; set; }
         [JsonIgnore]
         public Texture2D healthbar;
-        [JsonIgnore]
-        public static KeyboardState ActualKeyState;
-        [JsonIgnore]
-        public static MouseState ActualMouseState;
         [JsonIgnore]
         public Block currentBlock;
         [JsonIgnore]
@@ -38,14 +39,40 @@ namespace ToT
         public float Rotation { get; set; }
         [JsonIgnore]
         public bool Collided { get; set; }
+        [JsonIgnore]
+        public Vector2 RealMousePos { get; set; }
+        [JsonIgnore]
+        public float DistanceToCharge { get; set; }
+        [JsonIgnore]
+        public float DistanceToBlink { get; set; }
+        [JsonIgnore]
+        public Vector2 DashDirection { get; set; }
+        [JsonIgnore]
+        public Vector2 BlinkDirection { get; set; }
+        public List<Projectile> Projectiles { get; set; }
+        [JsonIgnore]
+        public Texture2D ProjImg { get; set; }
+        [JsonIgnore]
+        public Animation MainAnim { get; set; }
+        public string CharImg { get; set; }
+
+        public const float ChargeSpeed = 0.05f;
         public Player(string name, Vector2 pozition, Rectangle defaultRect, Rectangle drawRect, PlayerClass pClass = PlayerClass.Noob)
         {
+            //this.CharImg = "Player01.png";
+            this.CharImg = "character4.png";
+            
+            this.MainAnim = new Animation(AnimationType.Spritesheet);
             this.name = name;
             this.position = pozition;
             this.defaultRect = defaultRect;
             this.drawRect = drawRect;
 
             PlayerProps = new List<Prop>();
+            Projectiles = new List<Projectile>();
+
+            //Loading Default Projectile Images
+
             Init(pClass);
         }
 
@@ -54,10 +81,9 @@ namespace ToT
             //Initiate a player of the pClass player class according to some bs templates.
             //Maybe use an editor later.
             PlayerProps.Clear();
-
-            Random tRand = new Random();
-
-            Pain = tRand.Next(0, 10);
+            
+            //Pain = StaticRandom.Instance.Next(0, 10);
+            Pain = 0;
             LastPain = Pain;
 
             switch(pClass)
@@ -66,12 +92,18 @@ namespace ToT
                     PlayerProps.Add(new Prop("Health", 10));
                     PlayerProps.Add(new Prop("Energy", 0));
                     PlayerProps.Add(new Prop("Speed", 5));
+                    PlayerProps.Add(new Prop("Charge", 1));
+                    PlayerProps.Add(new Prop("ChargeDistance", 160));
+                    PlayerProps.Add(new Prop("Attack-Melee", 1));
                     break;
                 case PlayerClass.Warrior:
                     PlayerProps.Add(new Prop("Level", 1));
                     PlayerProps.Add(new Prop("Health", 20));
                     PlayerProps.Add(new Prop("Energy", 5));
                     PlayerProps.Add(new Prop("Speed", 6));
+                    PlayerProps.Add(new Prop("Charge", 1));
+                    PlayerProps.Add(new Prop("ChargeDistance", 240));
+                    PlayerProps.Add(new Prop("Attack-Melee", 1));
                     break;
                 case PlayerClass.Archer:
                     PlayerProps.Add(new Prop("Level", 1));
@@ -84,6 +116,8 @@ namespace ToT
                     PlayerProps.Add(new Prop("Health", 10));
                     PlayerProps.Add(new Prop("Energy", 20));
                     PlayerProps.Add(new Prop("Speed", 7));
+                    PlayerProps.Add(new Prop("Blink", 1));
+                    PlayerProps.Add(new Prop("BlinkDistance", 160));
                     break;
                 case PlayerClass.Druid:
                     PlayerProps.Add(new Prop("Level", 1));
@@ -109,15 +143,6 @@ namespace ToT
                 if (tP.Name == propName)
                     return tP;
             return null;
-        }
-
-        public float GetPropLevel(string propName)
-        {
-            //Returns the level of the propName property
-            foreach (Prop tP in PlayerProps)
-                if (tP.Name == propName)
-                    return tP.Level;
-            return 0;
         }
 
         public float SetPropLevel(string propName, float propLevel)
@@ -307,62 +332,120 @@ namespace ToT
             return newBlock;
         }
 
-        public static void Update(Camera pCam, World currentWorld)
+        public static void Update(Camera pCam, World currentWorld, InputManager playerInputs, string CurrentPlayer = "")
         {
-            ActualKeyState = Keyboard.GetState();
-            ActualMouseState = Mouse.GetState();
-
-
+            
             foreach (Player p in players)
             {
                 p.defaultRect.X = (int)p.position.X;
                 p.defaultRect.Y = (int)p.position.Y;
 
+                if (p.MainAnim.Image != null)
+                {
+                    p.MainAnim.Update();
+                }
+
                 //This step is just sending a Player state
-                if (p.name.Equals(TextInput.text)) //If the player's name is equal to the TextInput your name.
+                if (p.name.Equals(CurrentPlayer)) //If the player's name is equal to the TextInput your name.
                 {
                     if (currentWorld != null)
                         if (p.currentBlock == null && currentWorld.BlocksBase.Count > 0)
                             p.currentBlock = currentWorld.BlocksBase[0];
 
-
-
-                    Vector2 mousePosition = new Vector2(ActualMouseState.X, ActualMouseState.Y);
+                    Vector2 mousePosition = playerInputs.MousePosition();
                     //p.Rotation = (float)Math.Atan2((double)ActualMouseState.Position.Y - ((16) - pCam.Position.Y), (double)ActualMouseState.Position.X - ((p.position.X + 16) - pCam.Position.X)); //this will return the angle(in radians) from sprite to mouse.
 
                     Vector2 dPos = ((p.position) - pCam.Position) - mousePosition;
 
                     p.Rotation = (float)Math.Atan2(dPos.Y, dPos.X);
 
+                    if (p.MainAnim.Active)
+                        p.MainAnim.Active = false;
+
                     float fSpeed = p.GetPropLevel("Speed");
-                    if (ActualKeyState.IsKeyDown(Keys.Right) || ActualKeyState.IsKeyDown(Keys.D))
+                    if (playerInputs.KeyDown(Keys.Right) || playerInputs.KeyDown(Keys.D))
                     {
+                        p.MainAnim.Active = true;
                         p.lastPos = p.position;
 
                         p.position.X += fSpeed;
                         p.ValidateNewPos(p, currentWorld);
                     }
-                    if (ActualKeyState.IsKeyDown(Keys.Left) || ActualKeyState.IsKeyDown(Keys.A))
+                    if (playerInputs.KeyDown(Keys.Left) || playerInputs.KeyDown(Keys.A))
                     {
+                        p.MainAnim.Active = true;
                         p.lastPos = p.position;
 
                         p.position.X -= fSpeed;
                         p.ValidateNewPos(p, currentWorld);
                     }
-                    if (ActualKeyState.IsKeyDown(Keys.Up) || ActualKeyState.IsKeyDown(Keys.W))
+                    if (playerInputs.KeyDown(Keys.Up) || playerInputs.KeyDown(Keys.W))
                     {
+                        p.MainAnim.Active = true;
                         p.lastPos = p.position;
 
                         p.position.Y -= fSpeed;
                         p.ValidateNewPos(p, currentWorld);
                     }
-                    if (ActualKeyState.IsKeyDown(Keys.Down) || ActualKeyState.IsKeyDown(Keys.S))
+                    if (playerInputs.KeyDown(Keys.Down) || playerInputs.KeyDown(Keys.S))
                     {
+                        p.MainAnim.Active = true;
                         p.lastPos = p.position;
 
                         p.position.Y += fSpeed;
                         p.ValidateNewPos(p, currentWorld);
                     }
+
+                    if (playerInputs.KeyPressed(Keys.Space) || playerInputs.ButtonPressed(Buttons.Y))
+                    {
+                        p.MainAnim.Active = true;
+                        p.lastPos = p.position;
+
+                        switch(p.CurrentClass)
+                        {
+                            case PlayerClass.Noob:
+                            case PlayerClass.Warrior:
+                                p.UsePower("Charge", playerInputs);
+                                break;
+                            case PlayerClass.Mage:
+                                p.UsePower("Blink", playerInputs);
+                                break;
+                        }
+                    }
+
+                    if (playerInputs.MousePressed())
+                    {
+                        p.UsePower("Attack-Melee", playerInputs, pCam);
+                    }
+
+                    //Checks if there's a charging distance remaining.
+                    if (p.DistanceToCharge > 0)
+                    {
+                        p.RealMousePos = playerInputs.MousePosition() + pCam.Position;
+                        p.DashDirection = p.RealMousePos - p.position;
+                        p.DashDirection.Normalize();
+
+                        p.position += p.DashDirection * ChargeSpeed;
+
+                        p.ValidateNewPos(p, currentWorld);
+                        p.DistanceToCharge -= Vector2.Distance(p.lastPos, p.position);
+                        p.lastPos = p.position;
+                    }
+
+                    //Checks if there's a blinking distance remaining.
+                    if (p.DistanceToBlink > 0)
+                    {
+                        p.RealMousePos = playerInputs.MousePosition() + pCam.Position;
+                        p.DashDirection = p.RealMousePos - p.position;
+                        p.DashDirection.Normalize();
+
+                        //p.position += (p.DashDirection * (ChargeSpeed * new Vector2(0.1f, 0.1f)));
+
+                        p.ValidateNewPos(p, currentWorld);
+
+                        p.DistanceToCharge -= Vector2.Distance(p.lastPos, p.position);
+                    }
+
 
                     //if (p.lastPos != p.position)
                     //if (p.Collided)
@@ -375,8 +458,78 @@ namespace ToT
                     Network.outmsg.Write((int)p.position.Y);
                     Network.outmsg.Write((float)p.Rotation);
                     Network.outmsg.Write((float)p.Pain);
+                    Network.outmsg.Write(JsonConvert.SerializeObject(p.Projectiles));
 
                     Network.Client.SendMessage(Network.outmsg, NetDeliveryMethod.Unreliable);
+                }
+            }
+        }
+
+        public float GetPropLevel(string PowerName)
+        {
+            float powerLevel = 0;
+            foreach (Prop tP in PlayerProps)
+                if (tP.Name == PowerName)
+                    if (tP.Level > powerLevel)
+                        powerLevel = tP.Level;
+
+            return powerLevel;
+        }
+
+        public void Attack(Prop attack, InputManager playerInputs, Camera pCam = null)
+        {
+            switch(attack.Name.ToLower())
+            {
+                case "attack-melee":
+                    switch((int)attack.Level)
+                    {
+                        case 1:
+                            Projectile tProj = new Projectile(attack);
+                            tProj.Init(position, playerInputs.MousePosition() + pCam.Position);
+                            Projectiles.Add(tProj);
+                            
+                            break;
+                        case 2:
+
+                            break;
+                        case 3:
+
+                            break;
+                    }
+                    break;
+                case "attack-ranged":
+                    switch ((int)attack.Level)
+                    {
+                        case 1:
+
+                            break;
+                        case 2:
+
+                            break;
+                        case 3:
+
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        public void UsePower(string PowerName, InputManager playerInputs, Camera pCam = null)
+        {
+            if (GetPropLevel(PowerName) > 0)
+            {
+                switch(PowerName)
+                {
+                    case "Charge":
+                        DistanceToCharge = GetPropLevel("ChargeDistance");
+                        break;
+                    case "Blink":
+                        DistanceToCharge = GetPropLevel("BlinkDistance");
+                        break;
+                    case "Attack-Melee":
+                        CurrentAttack = GetProp("Attack-Melee");
+                        Attack(CurrentAttack, playerInputs, pCam);
+                        break;
                 }
             }
         }

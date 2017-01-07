@@ -47,16 +47,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Animation.cs" />
     <Compile Include="Block.cs" />
     <Compile Include="FileManager.cs" />
     <Compile Include="FrameCounter.cs" />
+    <Compile Include="InputManager.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="modEnum.cs" />
+    <Compile Include="modStatic.cs" />
     <Compile Include="NPC.cs" />
+    <Compile Include="Projectile.cs" />
     <Compile Include="Prop.cs" />
     <Compile Include="Template.cs" />
     <Compile Include="TextureRect.cs" />
     <Compile Include="Thing.cs" />
+    <Compile Include="TileTemplate.cs" />
     <Compile Include="World.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

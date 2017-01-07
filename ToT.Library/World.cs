@@ -18,7 +18,7 @@ namespace ToT.Library
         public List<Block> BlocksSouth { get; set; }
         public List<Block> BlocksWest { get; set; }
         public List<Block> BlocksEast { get; set; }
-
+        
         public World()
         {
             BlocksBase = new List<Block>();
@@ -53,23 +53,21 @@ namespace ToT.Library
                     Coords = "B:0"
                 });
 
-                AddTiles(BlocksNorth, 5, Orientation.North);
-                AddTiles(BlocksSouth, 5, Orientation.South);
-                AddTiles(BlocksWest, 5, Orientation.West);
-                AddTiles(BlocksEast, 5, Orientation.East);
+                AddTiles(BlocksNorth, 5, Orientation.North, StuffTemplate);
+                AddTiles(BlocksSouth, 5, Orientation.South, StuffTemplate);
+                AddTiles(BlocksWest, 5, Orientation.West, StuffTemplate);
+                AddTiles(BlocksEast, 5, Orientation.East, StuffTemplate);
             }
 
         }
 
-        public void AddTiles(List<Block> Blocks, int nbTiles, Orientation ori)
+        public void AddTiles(List<Block> Blocks, int nbTiles, Orientation ori, Template tTemplate)
         {
-            Random randDim = new Random();
             Block lastBlock;
             Vector2 tDimensions;
 
 
             Array sizeValues;
-            Random randSize = new Random();
             TileSize randomSize;
 
             sizeValues = Enum.GetValues(typeof(TileSize));
@@ -94,14 +92,14 @@ namespace ToT.Library
                 {
                     lastBlock = Blocks[Blocks.Count - 1];
 
-                    randomSize = (TileSize)sizeValues.GetValue(randSize.Next(0, sizeValues.Length));
+                    randomSize = (TileSize)sizeValues.GetValue(StaticRandom.Instance.Next(0, sizeValues.Length));
                 }
                 else
                 {
                     lastBlock = BlocksBase[0];
 
                     //randomSize = TileSize.Medium;
-                    randomSize = (TileSize)sizeValues.GetValue(randSize.Next(0, sizeValues.Length - 3));
+                    randomSize = (TileSize)sizeValues.GetValue(StaticRandom.Instance.Next(0, sizeValues.Length - 3));
                 }
                 
                 tDimensions = GetSize(randomSize);
@@ -113,7 +111,7 @@ namespace ToT.Library
                         if (Blocks.Count == 0)
                             tX = lastBlock.Position.X + (lastBlock.Dimensions.X - tDimensions.X) / 2;
                         else
-                            tX = randDim.Next((int)lastBlock.Position.X - (int)lastBlock.Dimensions.X + 96, (int)lastBlock.Position.X + (int)lastBlock.Dimensions.X - 96);
+                            tX = StaticRandom.Instance.Next((int)lastBlock.Position.X - (int)lastBlock.Dimensions.X + 96, (int)lastBlock.Position.X + (int)lastBlock.Dimensions.X - 96);
 
                         tY = lastBlock.Position.Y - tDimensions.Y;
                         sBCoords = "N:" + Blocks.Count.ToString();
@@ -122,7 +120,7 @@ namespace ToT.Library
                         if (Blocks.Count == 0)
                             tX = lastBlock.Position.X + (lastBlock.Dimensions.X - tDimensions.X) / 2;
                         else
-                            tX = randDim.Next((int)lastBlock.Position.X - (int)lastBlock.Dimensions.X + 96, (int)lastBlock.Position.X + (int)lastBlock.Dimensions.X - 96);
+                            tX = StaticRandom.Instance.Next((int)lastBlock.Position.X - (int)lastBlock.Dimensions.X + 96, (int)lastBlock.Position.X + (int)lastBlock.Dimensions.X - 96);
                         tY = lastBlock.Position.Y + lastBlock.Dimensions.Y;
                         sBCoords = "S:" + Blocks.Count.ToString();
 
@@ -131,7 +129,7 @@ namespace ToT.Library
                         if (Blocks.Count == 0)
                             tY = lastBlock.Position.Y + (lastBlock.Dimensions.Y - tDimensions.Y) / 2;
                         else
-                            tY = randDim.Next((int)lastBlock.Position.Y - (int)lastBlock.Dimensions.Y + 96, (int)lastBlock.Position.Y + (int)lastBlock.Dimensions.Y - 96);
+                            tY = StaticRandom.Instance.Next((int)lastBlock.Position.Y - (int)lastBlock.Dimensions.Y + 96, (int)lastBlock.Position.Y + (int)lastBlock.Dimensions.Y - 96);
                         tX = lastBlock.Position.X - tDimensions.X;
                         sBCoords = "W:" + Blocks.Count.ToString();
 
@@ -140,7 +138,7 @@ namespace ToT.Library
                         if (Blocks.Count == 0)
                             tY = lastBlock.Position.Y + (lastBlock.Dimensions.Y - tDimensions.Y) / 2;
                         else
-                            tY = randDim.Next((int)lastBlock.Position.Y - (int)lastBlock.Dimensions.Y + 96, (int)lastBlock.Position.Y + (int)lastBlock.Dimensions.Y - 96);
+                            tY = StaticRandom.Instance.Next((int)lastBlock.Position.Y - (int)lastBlock.Dimensions.Y + 96, (int)lastBlock.Position.Y + (int)lastBlock.Dimensions.Y - 96);
                         tX = lastBlock.Position.X + lastBlock.Dimensions.X;
                         sBCoords = "E:" + Blocks.Count.ToString();
 
@@ -155,10 +153,11 @@ namespace ToT.Library
                     Coords = sBCoords
                 };
 
+                int indexTemplate = StaticRandom.Instance.Next(0, StuffTemplate.TTemplates.Count);
 
+                newBlock.TileTemplate = StuffTemplate.TTemplates[indexTemplate];
+                newBlock.GenerateStuff();
                 Blocks.Add(newBlock);
-
-
             }
             
         }
@@ -166,32 +165,32 @@ namespace ToT.Library
         private static Vector2 GetSize(TileSize randomSize)
         {
             Vector2 tDimensions;
-            Random tRand = new Random();
+
             switch (randomSize)
             {
                 case TileSize.Tiny:
-                    tDimensions = new Vector2(tRand.Next(144, 289), tRand.Next(144, 289));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(144, 289), StaticRandom.Instance.Next(144, 289));
                     break;
                 case TileSize.VerySmall:
-                    tDimensions = new Vector2(tRand.Next(240, 481), tRand.Next(240, 481));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(240, 481), StaticRandom.Instance.Next(240, 481));
                     break;
                 case TileSize.Small:
-                    tDimensions = new Vector2(tRand.Next(384, 769), tRand.Next(384, 769));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(384, 769), StaticRandom.Instance.Next(384, 769));
                     break;
                 case TileSize.Medium:
-                    tDimensions = new Vector2(tRand.Next(432, 865), tRand.Next(432, 865));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(432, 865), StaticRandom.Instance.Next(432, 865));
                     break;
                 case TileSize.Large:
-                    tDimensions = new Vector2(tRand.Next(576, 1153), tRand.Next(576, 1153));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(576, 1153), StaticRandom.Instance.Next(576, 1153));
                     break;
                 case TileSize.VeryLarge:
-                    tDimensions = new Vector2(tRand.Next(816, 1441), tRand.Next(816, 1441));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(816, 1441), StaticRandom.Instance.Next(816, 1441));
                     break;
                 case TileSize.Huge:
-                    tDimensions = new Vector2(tRand.Next(1200, 1681), tRand.Next(1200, 1681));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(1200, 1681), StaticRandom.Instance.Next(1200, 1681));
                     break;
                 case TileSize.HughMongus:
-                    tDimensions = new Vector2(tRand.Next(1440, 1921), tRand.Next(1440, 1921));
+                    tDimensions = new Vector2(StaticRandom.Instance.Next(1440, 1921), StaticRandom.Instance.Next(1440, 1921));
                     break;
                 default:
                     tDimensions = new Vector2(640, 480);
@@ -229,18 +228,41 @@ namespace ToT.Library
                 tB.UpdateServer(serverGameTime);
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, SpriteFont textureFont)
         {
+
             foreach (Block tB in BlocksBase)
-                tB.Draw(spriteBatch);
-            foreach (Block tB in BlocksNorth)
-                tB.Draw(spriteBatch);
-            foreach (Block tB in BlocksSouth)
-                tB.Draw(spriteBatch);
-            foreach (Block tB in BlocksWest)
-                tB.Draw(spriteBatch);
-            foreach (Block tB in BlocksEast)
-                tB.Draw(spriteBatch);
+                tB.Draw(spriteBatch, textureFont);
+
+            DrawBlock(BlocksNorth, spriteBatch, textureFont);
+            DrawBlock(BlocksSouth, spriteBatch, textureFont);
+            DrawBlock(BlocksWest, spriteBatch, textureFont);
+            DrawBlock(BlocksEast, spriteBatch, textureFont);
+            //foreach (Block tB in BlocksNorth)
+            //    tB.Draw(spriteBatch, textureFont); 
+            //foreach (Block tB in BlocksSouth)
+            //    tB.Draw(spriteBatch, textureFont);
+            //foreach (Block tB in BlocksWest)
+            //    tB.Draw(spriteBatch, textureFont);
+            //foreach (Block tB in BlocksEast)
+            //    tB.Draw(spriteBatch, textureFont);
+        }
+
+        private void DrawBlock(List<Block> tBlocks, SpriteBatch spriteBatch, SpriteFont textureFont)
+        {
+            foreach (Block tB in tBlocks)
+            {
+                if (!tB.ImgInitiated)
+                {
+                    foreach (TileTemplate tTT in StuffTemplate.TTemplates)
+                        if (tTT.Name == tB.TileTemplate.Name)
+                        {
+                            tB.InitiateImages(tTT);
+                            break;
+                        }
+                }
+                tB.Draw(spriteBatch, textureFont);
+            }
         }
     }
 }

@@ -37,3 +37,9 @@
 /processorParam:TextureFormat=Color
 /build:char/char48_ballface2.png
 
+#begin fontUI.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Compressed
+/build:fontUI.spritefont
+

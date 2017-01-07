@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Input;
+using ToT.Library;
 
 namespace ToT
 {
@@ -30,14 +31,14 @@ namespace ToT
                Keys.Z, Keys.Back, Keys.OemPeriod 
         };
 
-        public static void Update()
+        public static void Update(InputManager playerInputs)
         {
             LastKeyState = ActualKeyState;
             ActualKeyState = Keyboard.GetState();
 
             foreach (Keys key in keysToCheck)
             {
-                if (ActualKeyState.IsKeyDown(key) && LastKeyState.IsKeyUp(key))
+                if (playerInputs.KeyDown(key) && LastKeyState.IsKeyUp(key))
                 {
                     _char = null;
 
@@ -170,8 +171,8 @@ namespace ToT
                     }
                     if (key != Keys.Back)
                     {
-                        if (ActualKeyState.IsKeyDown(Keys.LeftShift) ||
-                            ActualKeyState.IsKeyDown(Keys.RightShift))
+                        if (playerInputs.KeyDown(Keys.LeftShift) ||
+                            playerInputs.KeyDown(Keys.RightShift))
                         {
                             _char = _char.ToUpper();
                         }

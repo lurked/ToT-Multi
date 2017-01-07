@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.ComponentModel;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace ToT.Library
 {
@@ -19,6 +20,10 @@ namespace ToT.Library
         [JsonIgnore]
         [Browsable(false)]
         public bool ToDraw { get; set; }
+
+        [JsonIgnore]
+        [Browsable(false)]
+        public Texture2D Img { get; set; }
         
 
         public Item()

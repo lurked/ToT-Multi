@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using ToT.Library;
-
+using Newtonsoft.Json;
 namespace ToT
 {
     class Network
@@ -70,18 +70,29 @@ namespace ToT
                                             int y = incmsg.ReadInt32();
                                             float rot = incmsg.ReadFloat(); // -||- player's angle
                                             float pain = incmsg.ReadFloat(); // -||- player's pain
+                                            string srlzdProjs = incmsg.ReadString();
 
                                             for (int i = 0; i < Player.players.Count; i++)
                                             {
                                                 //It is important that you only set the value of the player, if it is not yours, 
                                                 //otherwise it would cause lagg (because you'll always be first with yours, and there is a slight delay from server-client).
                                                 //Of course, sometimes have to force the server to the actual position of the player, otherwise could easily cheat.
-                                                if (Player.players[i].name.Equals(name) && Player.players[i].name != TextInput.text)
+                                                if (Player.players[i].name.Equals(name))
                                                 {
-                                                    Player.players[i].position = new Vector2(x, y);
-                                                    Player.players[i].Rotation = rot;
-                                                    Player.players[i].Pain = pain;
-                                                    break;
+                                                    if (!Player.players[i].name.Equals(playerName))
+                                                    {
+                                                        Player.players[i].position = new Vector2(x, y);
+                                                        Player.players[i].Rotation = rot;
+                                                        Player.players[i].Pain = pain;
+                                                        Player.players[i].Projectiles = JsonConvert.DeserializeObject<List<Projectile>>(srlzdProjs);
+                                                        break;
+                                                    }
+                                                    else
+                                                    {
+                                                        Player.players[i].Projectiles = JsonConvert.DeserializeObject<List<Projectile>>(srlzdProjs);
+                                                        break;
+
+                                                    }
                                                 }
                                             }
                                         }

@@ -82,6 +82,18 @@
             this.dgNPCProps = new System.Windows.Forms.DataGridView();
             this.pictureNPC = new System.Windows.Forms.PictureBox();
             this.gridNPC = new System.Windows.Forms.PropertyGrid();
+            this.tabTileTemplates = new System.Windows.Forms.TabPage();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.btnRemoveTileTemplate = new System.Windows.Forms.Button();
+            this.dgTTemplates = new System.Windows.Forms.DataGridView();
+            this.btnAddTileTemplate = new System.Windows.Forms.Button();
+            this.dgTTempEnemies = new System.Windows.Forms.DataGridView();
+            this.dgPossibleEnemies = new System.Windows.Forms.DataGridView();
+            this.btnDelAllTTempEnemies = new System.Windows.Forms.Button();
+            this.btnAddAllTTempEnemies = new System.Windows.Forms.Button();
+            this.btnDelTTempEnemies = new System.Windows.Forms.Button();
+            this.btnAddTTempEnemies = new System.Windows.Forms.Button();
+            this.gridTTemp = new System.Windows.Forms.PropertyGrid();
             this.label5 = new System.Windows.Forms.Label();
             this.btnBrowseTemplate = new System.Windows.Forms.Button();
             this.txtTemplatePath = new System.Windows.Forms.TextBox();
@@ -111,6 +123,14 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgNPCs)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgNPCProps)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureNPC)).BeginInit();
+            this.tabTileTemplates.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
+            this.splitContainer2.Panel1.SuspendLayout();
+            this.splitContainer2.Panel2.SuspendLayout();
+            this.splitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgTTemplates)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgTTempEnemies)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgPossibleEnemies)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -339,6 +359,7 @@
             // cboWorld
             // 
             this.cboWorld.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboWorld.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.cboWorld.FormattingEnabled = true;
             this.cboWorld.Location = new System.Drawing.Point(807, 21);
             this.cboWorld.Name = "cboWorld";
@@ -430,6 +451,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabTKItems.Controls.Add(this.tabItems);
             this.tabTKItems.Controls.Add(this.tabNPCs);
+            this.tabTKItems.Controls.Add(this.tabTileTemplates);
             this.tabTKItems.Location = new System.Drawing.Point(4, 72);
             this.tabTKItems.Name = "tabTKItems";
             this.tabTKItems.SelectedIndex = 0;
@@ -697,6 +719,155 @@
             this.gridNPC.Size = new System.Drawing.Size(382, 285);
             this.gridNPC.TabIndex = 0;
             // 
+            // tabTileTemplates
+            // 
+            this.tabTileTemplates.Controls.Add(this.splitContainer2);
+            this.tabTileTemplates.Location = new System.Drawing.Point(4, 22);
+            this.tabTileTemplates.Name = "tabTileTemplates";
+            this.tabTileTemplates.Size = new System.Drawing.Size(1124, 548);
+            this.tabTileTemplates.TabIndex = 2;
+            this.tabTileTemplates.Text = "Tile Templates";
+            this.tabTileTemplates.UseVisualStyleBackColor = true;
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer2.Location = new System.Drawing.Point(6, 6);
+            this.splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.btnRemoveTileTemplate);
+            this.splitContainer2.Panel1.Controls.Add(this.dgTTemplates);
+            this.splitContainer2.Panel1.Controls.Add(this.btnAddTileTemplate);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.dgTTempEnemies);
+            this.splitContainer2.Panel2.Controls.Add(this.dgPossibleEnemies);
+            this.splitContainer2.Panel2.Controls.Add(this.btnDelAllTTempEnemies);
+            this.splitContainer2.Panel2.Controls.Add(this.btnAddAllTTempEnemies);
+            this.splitContainer2.Panel2.Controls.Add(this.btnDelTTempEnemies);
+            this.splitContainer2.Panel2.Controls.Add(this.btnAddTTempEnemies);
+            this.splitContainer2.Panel2.Controls.Add(this.gridTTemp);
+            this.splitContainer2.Size = new System.Drawing.Size(1112, 536);
+            this.splitContainer2.SplitterDistance = 360;
+            this.splitContainer2.TabIndex = 5;
+            // 
+            // btnRemoveTileTemplate
+            // 
+            this.btnRemoveTileTemplate.Location = new System.Drawing.Point(28, 3);
+            this.btnRemoveTileTemplate.Name = "btnRemoveTileTemplate";
+            this.btnRemoveTileTemplate.Size = new System.Drawing.Size(19, 23);
+            this.btnRemoveTileTemplate.TabIndex = 3;
+            this.btnRemoveTileTemplate.Text = "-";
+            this.btnRemoveTileTemplate.UseVisualStyleBackColor = true;
+            // 
+            // dgTTemplates
+            // 
+            this.dgTTemplates.AllowUserToAddRows = false;
+            this.dgTTemplates.AllowUserToDeleteRows = false;
+            this.dgTTemplates.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgTTemplates.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgTTemplates.Location = new System.Drawing.Point(3, 32);
+            this.dgTTemplates.MultiSelect = false;
+            this.dgTTemplates.Name = "dgTTemplates";
+            this.dgTTemplates.ReadOnly = true;
+            this.dgTTemplates.Size = new System.Drawing.Size(354, 501);
+            this.dgTTemplates.TabIndex = 2;
+            this.dgTTemplates.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgTTemplates_CellClick);
+            // 
+            // btnAddTileTemplate
+            // 
+            this.btnAddTileTemplate.Location = new System.Drawing.Point(3, 3);
+            this.btnAddTileTemplate.Name = "btnAddTileTemplate";
+            this.btnAddTileTemplate.Size = new System.Drawing.Size(19, 23);
+            this.btnAddTileTemplate.TabIndex = 1;
+            this.btnAddTileTemplate.Text = "+";
+            this.btnAddTileTemplate.UseVisualStyleBackColor = true;
+            this.btnAddTileTemplate.Click += new System.EventHandler(this.btnAddTileTemplate_Click);
+            // 
+            // dgTTempEnemies
+            // 
+            this.dgTTempEnemies.AllowUserToAddRows = false;
+            this.dgTTempEnemies.AllowUserToDeleteRows = false;
+            this.dgTTempEnemies.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgTTempEnemies.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgTTempEnemies.Location = new System.Drawing.Point(392, 238);
+            this.dgTTempEnemies.MultiSelect = false;
+            this.dgTTempEnemies.Name = "dgTTempEnemies";
+            this.dgTTempEnemies.ReadOnly = true;
+            this.dgTTempEnemies.Size = new System.Drawing.Size(353, 295);
+            this.dgTTempEnemies.TabIndex = 12;
+            // 
+            // dgPossibleEnemies
+            // 
+            this.dgPossibleEnemies.AllowUserToAddRows = false;
+            this.dgPossibleEnemies.AllowUserToDeleteRows = false;
+            this.dgPossibleEnemies.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.dgPossibleEnemies.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgPossibleEnemies.Location = new System.Drawing.Point(3, 238);
+            this.dgPossibleEnemies.MultiSelect = false;
+            this.dgPossibleEnemies.Name = "dgPossibleEnemies";
+            this.dgPossibleEnemies.ReadOnly = true;
+            this.dgPossibleEnemies.Size = new System.Drawing.Size(348, 295);
+            this.dgPossibleEnemies.TabIndex = 11;
+            this.dgPossibleEnemies.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgPossibleEnemies_CellClick);
+            // 
+            // btnDelAllTTempEnemies
+            // 
+            this.btnDelAllTTempEnemies.Location = new System.Drawing.Point(357, 340);
+            this.btnDelAllTTempEnemies.Name = "btnDelAllTTempEnemies";
+            this.btnDelAllTTempEnemies.Size = new System.Drawing.Size(29, 23);
+            this.btnDelAllTTempEnemies.TabIndex = 10;
+            this.btnDelAllTTempEnemies.Text = "<<";
+            this.btnDelAllTTempEnemies.UseVisualStyleBackColor = true;
+            this.btnDelAllTTempEnemies.Click += new System.EventHandler(this.btnDelAllTTempEnemies_Click);
+            // 
+            // btnAddAllTTempEnemies
+            // 
+            this.btnAddAllTTempEnemies.Location = new System.Drawing.Point(357, 311);
+            this.btnAddAllTTempEnemies.Name = "btnAddAllTTempEnemies";
+            this.btnAddAllTTempEnemies.Size = new System.Drawing.Size(29, 23);
+            this.btnAddAllTTempEnemies.TabIndex = 9;
+            this.btnAddAllTTempEnemies.Text = ">>";
+            this.btnAddAllTTempEnemies.UseVisualStyleBackColor = true;
+            this.btnAddAllTTempEnemies.Click += new System.EventHandler(this.btnAddAllTTempEnemies_Click);
+            // 
+            // btnDelTTempEnemies
+            // 
+            this.btnDelTTempEnemies.Location = new System.Drawing.Point(357, 266);
+            this.btnDelTTempEnemies.Name = "btnDelTTempEnemies";
+            this.btnDelTTempEnemies.Size = new System.Drawing.Size(29, 23);
+            this.btnDelTTempEnemies.TabIndex = 8;
+            this.btnDelTTempEnemies.Text = "<";
+            this.btnDelTTempEnemies.UseVisualStyleBackColor = true;
+            this.btnDelTTempEnemies.Click += new System.EventHandler(this.btnDelTTempEnemies_Click);
+            // 
+            // btnAddTTempEnemies
+            // 
+            this.btnAddTTempEnemies.Location = new System.Drawing.Point(357, 237);
+            this.btnAddTTempEnemies.Name = "btnAddTTempEnemies";
+            this.btnAddTTempEnemies.Size = new System.Drawing.Size(29, 23);
+            this.btnAddTTempEnemies.TabIndex = 7;
+            this.btnAddTTempEnemies.Text = ">";
+            this.btnAddTTempEnemies.UseVisualStyleBackColor = true;
+            this.btnAddTTempEnemies.Click += new System.EventHandler(this.btnAddTTempEnemies_Click);
+            // 
+            // gridTTemp
+            // 
+            this.gridTTemp.Location = new System.Drawing.Point(3, 3);
+            this.gridTTemp.Name = "gridTTemp";
+            this.gridTTemp.Size = new System.Drawing.Size(348, 229);
+            this.gridTTemp.TabIndex = 0;
+            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -766,9 +937,18 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgNPCs)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgNPCProps)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureNPC)).EndInit();
+            this.tabTileTemplates.ResumeLayout(false);
+            this.splitContainer2.Panel1.ResumeLayout(false);
+            this.splitContainer2.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
+            this.splitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgTTemplates)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgTTempEnemies)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgPossibleEnemies)).EndInit();
             this.ResumeLayout(false);
 
         }
+
 
         #endregion
 
@@ -824,6 +1004,18 @@
         private System.Windows.Forms.DataGridView dgNPCProps;
         private System.Windows.Forms.PictureBox pictureNPC;
         private System.Windows.Forms.PropertyGrid gridNPC;
+        private System.Windows.Forms.TabPage tabTileTemplates;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.Button btnRemoveTileTemplate;
+        private System.Windows.Forms.DataGridView dgTTemplates;
+        private System.Windows.Forms.Button btnAddTileTemplate;
+        private System.Windows.Forms.Button btnDelAllTTempEnemies;
+        private System.Windows.Forms.Button btnAddAllTTempEnemies;
+        private System.Windows.Forms.Button btnDelTTempEnemies;
+        private System.Windows.Forms.Button btnAddTTempEnemies;
+        private System.Windows.Forms.PropertyGrid gridTTemp;
+        private System.Windows.Forms.DataGridView dgTTempEnemies;
+        private System.Windows.Forms.DataGridView dgPossibleEnemies;
         public static System.Windows.Forms.Label label1;
         public static System.Windows.Forms.TextBox textBox1;
         public static System.Windows.Forms.Timer timer1;

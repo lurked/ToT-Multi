@@ -25,9 +25,11 @@ namespace ToT.Server
         public const string IMAGESPATH = "C:/Prog/ToT/ToT/Data/Img/";
         public World CurrentWorld { get; set; }
         public Template CurrentTemplate { get; set; }
+        public TileTemplate CurrentTTemplate { get; set; }
         public GameTime ServerGameTime { get; set; }
         TimeSpan MainLoopTS { get; set; }
         FileManager fileManager;
+        List<NPC> CurrTempEnemies;
         public totServerForm()
         {
             InitializeComponent();
@@ -142,7 +144,7 @@ namespace ToT.Server
             cboWorld.Text = "New World";
 
             //Loading Templates to use for the select world.
-            cboWorld.Items.Clear();
+            cboTemplate.Items.Clear();
             List<string> tTemplates = fileManager.GetWorlds(TEMPLATESPATH);
             foreach (string tS in tTemplates)
                 cboTemplate.Items.Add(tS);
@@ -241,6 +243,7 @@ namespace ToT.Server
         private void FillItemsList(Template tTemplate)
         {
             dgItems.DataSource = null;
+            
             var bindingList = new BindingList<Item>(tTemplate.Items);
             var source = new BindingSource(bindingList, null);
             dgItems.DataSource = source;
@@ -250,6 +253,36 @@ namespace ToT.Server
             var bindingList2 = new BindingList<NPC>(tTemplate.NPCs);
             var source2 = new BindingSource(bindingList2, null);
             dgNPCs.DataSource = source2;
+
+
+            dgTTemplates.DataSource = null;
+            var bindingList3 = new BindingList<TileTemplate>(tTemplate.TTemplates);
+            var source3 = new BindingSource(bindingList3, null);
+            dgTTemplates.DataSource = source3;
+
+        }
+
+        private void FillTempsList(Template tTemplate)
+        {
+            dgPossibleEnemies.DataSource = null;
+            CurrTempEnemies = new List<NPC>();
+
+            foreach (NPC tN in tTemplate.NPCs)
+                if (tN.NpcType == NPCType.Enemy)
+                    CurrTempEnemies.Add(tN);
+
+            var bindingList = new BindingList<NPC>(CurrTempEnemies);
+            var source = new BindingSource(bindingList, null);
+            dgPossibleEnemies.DataSource = source;
+        }
+
+        private void FillTTempsList(TileTemplate TTemplate)
+        {
+            dgTTempEnemies.DataSource = null;
+
+            var bindingList = new BindingList<NPC>(TTemplate.Enemies);
+            var source = new BindingSource(bindingList, null);
+            dgTTempEnemies.DataSource = source;
         }
 
         private void FillPropsList(Item tItem)
@@ -303,8 +336,22 @@ namespace ToT.Server
             string nextNPC;
             int iNextNPC = 1;
 
-            foreach(NPC tI in CurrentTemplate.NPCs)
-                if (tI.Name == tNPCName  + " " + iNextNPC)
+            foreach (NPC tI in CurrentTemplate.NPCs)
+                if (tI.Name == tNPCName + " " + iNextNPC)
+                    iNextNPC += 1;
+
+            nextNPC = tNPCName + " " + iNextNPC;
+
+            return nextNPC;
+        }
+
+        public string GetNextTemplate(string tNPCName)
+        {
+            string nextNPC;
+            int iNextNPC = 1;
+
+            foreach (TileTemplate tTT in CurrentTemplate.TTemplates)
+                if (tTT.Name == tNPCName + " " + iNextNPC)
                     iNextNPC += 1;
 
             nextNPC = tNPCName + " " + iNextNPC;
@@ -328,6 +375,15 @@ namespace ToT.Server
             gridNPC.SelectedObject = CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index];
             FillNPCPropsList(CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index]);
             txtImageNPC.Text = CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index].TextureImg;
+        }
+
+
+        private void dgTTemplates_CellClick(object sender, System.Windows.Forms.DataGridViewCellEventArgs e)
+        {
+            gridTTemp.SelectedObject = CurrentTemplate.TTemplates[dgTTemplates.CurrentRow.Index];
+            CurrentTTemplate = CurrentTemplate.TTemplates[dgTTemplates.CurrentRow.Index];
+            FillTemplatesList(CurrentTTemplate);
+            FillTempsList(CurrentTemplate);
         }
 
         private void toolStripBtnNewTemplate_Click(object sender, EventArgs e)
@@ -405,6 +461,69 @@ namespace ToT.Server
             CurrentTemplate.NPCs[dgNPCs.CurrentRow.Index].TextureImg = tIImg.ImgToReturn;
         }
 
+        private void FillTemplatesList(TileTemplate tTemp)
+        {
+            gridTTemp.SelectedObject = tTemp;
+            
+            FillTTempsList(tTemp);
+        }
+
+        public void AddEnemyToTTemp(TileTemplate tTemp, NPC enemyToAdd)
+        {
+            bool enemyExists = false;
+            foreach (NPC tS in tTemp.Enemies)
+                if (tS.Name == enemyToAdd.Name)
+                {
+                    enemyExists = true;
+                    break;
+                }
+            if (enemyExists == false)
+            {
+                tTemp.Enemies.Add(enemyToAdd);
+                FillTTempsList(tTemp);
+            }
+            else
+                MessageBox.Show("Enemy already exists in the current template.", "Enemy Exists.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+
+        }
+
+        private void btnAddTTempEnemies_Click(object sender, EventArgs e)
+        {
+            if (dgPossibleEnemies.SelectedCells != null)
+                AddEnemyToTTemp(CurrentTTemplate, CurrTempEnemies[dgPossibleEnemies.CurrentRow.Index]);
+                
+        }
+
+        private void btnDelTTempEnemies_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnAddAllTTempEnemies_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnDelAllTTempEnemies_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnAddTileTemplate_Click(object sender, EventArgs e)
+        {
+            string tTemplateName = "New Template";
+            tTemplateName = GetNextTemplate(tTemplateName);
+            CurrentTemplate.TTemplates.Add(new TileTemplate(tTemplateName));
+            FillItemsList(CurrentTemplate);
+            FillTempsList(CurrentTemplate);
+        }
+
+        private void dgPossibleEnemies_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+        
 
     }
 
@@ -511,6 +630,7 @@ namespace ToT.Server
                                                 outmsg.Write((int)Player.players[i].position.Y);
                                                 outmsg.Write((float)Player.players[i].Rotation);
                                                 outmsg.Write((float)Player.players[i].Pain);
+                                                outmsg.Write(JsonConvert.SerializeObject(Player.players[i].Projectiles));
 
                                                 Server.SendMessage(Network.outmsg, Network.Server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
                                             }
@@ -533,6 +653,7 @@ namespace ToT.Server
                                             int y = incmsg.ReadInt32();
                                             float rot = incmsg.ReadFloat(); // -||- player's angle
                                             float pain = incmsg.ReadFloat(); // -||- player's pain
+                                            string srlzdProjs = incmsg.ReadString();
 
                                             for (int i = 0; i < Player.players.Count; i++)
                                             {
@@ -542,6 +663,7 @@ namespace ToT.Server
                                                     Player.players[i].timeOut = 0;
                                                     Player.players[i].Rotation = rot;
                                                     Player.players[i].Pain = pain;
+                                                    Player.players[i].Projectiles = JsonConvert.DeserializeObject<List<Projectile>>(srlzdProjs);
                                                     break;
                                                 }
                                             }
@@ -633,6 +755,7 @@ namespace ToT.Server
         public float Rotation;
         public float Pain;
         public int timeOut; //This disconnects the client, even if no message from him within a certain period of time and not been reset value.
+        public List<Projectile> Projectiles;
 
         public static List<Player> players = new List<Player>();
 
@@ -643,6 +766,7 @@ namespace ToT.Server
             this.name = name;
             this.position = pozition;
             this.timeOut = timeOut;
+            this.Projectiles = new List<Projectile>();
         }
 
         public static void Update()
@@ -651,6 +775,19 @@ namespace ToT.Server
             {
                 for (int i = 0; i < players.Count; i++)
                 {
+                    for (int j = 0; j < players[i].Projectiles.Count; j++)
+                    {
+                        if (players[i].Projectiles[j].Active)
+                        {
+                            players[i].Projectiles[j].Update();
+                            if (players[i].Projectiles[j].Active)
+                                if (Vector2.Distance(players[i].Projectiles[j].Position, players[i].Projectiles[j].StartPosition) >= players[i].Projectiles[j].MaxDistance)
+                                {
+                                    players[i].Projectiles.RemoveAt(j);
+                                    j--;
+                                }
+                        }
+                    }
                     players[i].timeOut++; //This data member continuously counts up with every frame/tick.
 
                     //The server simply always sends data to the all players current position of all clients.
@@ -662,6 +799,7 @@ namespace ToT.Server
                     Network.outmsg.Write((int)players[i].position.Y);
                     Network.outmsg.Write((float)players[i].Rotation);
                     Network.outmsg.Write((float)players[i].Pain);
+                    Network.outmsg.Write(JsonConvert.SerializeObject(players[i].Projectiles));
 
                     Network.Server.SendMessage(Network.outmsg, Network.Server.Connections, NetDeliveryMethod.Unreliable, 0);
 

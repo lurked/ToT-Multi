@@ -13,6 +13,13 @@ public enum GameMode
     GodMode
 }
 
+public enum AnimationType
+{
+    None,
+    Spritesheet,
+    Sprite
+}
+
 public enum ClientState
 {
     Idle,
